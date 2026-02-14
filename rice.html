@@ -1,945 +1,670 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CropGuard - Rice Cultivation Analysis</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .progress-bar {
-            height: 8px;
-            border-radius: 4px;
-            transition: width 0.5s ease-in-out;
-        }
-        .disease-row:hover {
-            background-color: #f0fdf4;
-        }
-        .star-rating {
-            color: #f59e0b;
-            font-size: 1rem;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmer Friend · Rice Fertilizer Advice</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    .progress-bar { height: 8px; border-radius: 4px; transition: width .5s ease-in-out; }
+    .disease-row:hover { background-color: #f0fdf4; }
+    .dots::after { content: ""; display: inline-block; width: 0.8em; text-align: left; animation: dots 1s steps(5,end) infinite; }
+    @keyframes dots { 0% { content: ""; } 20% { content: "."; } 40% { content: ".."; } 60% { content: "..."; } 80% { content: "...."; } 100% { content: ""; } }
+    .fade-in { opacity: 0; transform: translateY(6px); transition: opacity .45s ease, transform .45s ease; }
+    .fade-in.show { opacity: 1; transform: translateY(0); }
+    canvas { width: 100% !important; height: auto !important; }
+    .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .status-deficient { background-color: #fee2e2; color: #991b1b; }
+    .status-optimal { background-color: #dcfce7; color: #166534; }
+    .status-excess { background-color: #fef9c3; color: #854d0e; }
+    .simple-english { font-size: 0.95rem; line-height: 1.5; }
+  </style>
 </head>
-<body class="bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-green-800 mb-2">CropGuard</h1>
-            <p class="text-gray-600">Comprehensive rice cultivation analysis and disease prevention tool</p>
-        </header>
+<body class="bg-gray-50 text-slate-800">
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Input Form Column -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold text-green-700 mb-4">Input Parameters</h2>
-                
-                <form id="cropForm">
-                    <div class="mb-4">
-                        <label for="district" class="block text-sm font-medium text-gray-700 mb-1">Select District</label>
-                        <select id="district" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <option value="">-- Select District --</option>
-                            <option value="Lucknow">Lucknow</option>
-                            <option value="Agra">Agra</option>
-                            <option value="Gorakhpur">Gorakhpur</option>
-                            <option value="Varanasi">Varanasi</option>
-                            <option value="Jhansi">Jhansi</option>
-                        </select>
-                    </div>
+<div class="container mx-auto px-4 py-8">
+  <header class="mb-6 text-center">
+    <h1 class="text-3xl font-bold text-green-800 mb-1">🌾 Farmer Friend · Rice Fertilizer Advice</h1>
+    <p class="text-gray-600 simple-english">Tell us about your field and get scientific fertilizer recommendations</p>
+  </header>
 
-                     <div class="mb-4">
-                            <label for="soilTexture" class="block text-sm font-medium text-gray-700 mb-1">Soil Texture</label>
-                            <select id="soilTexture" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                                <option value="">Select Soil Texture</option>
-                                <option value="Clay Loam">Clay Loam</option>
-                                <option value="Silty Clay Loam">Silty Clay Loam</option>
-                                <option value="Silty Loam">Silty Loam </option>
-                                <option value="Clay">Clay</option>
-                               
-                            </select>
-                        </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="mb-4">
-                            <label for="soilPh" class="block text-sm font-medium text-gray-700 mb-1">Soil pH</label>
-                            <input type="number" step="0.1" id="soilPh" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 6.0–6.8</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="soilMoisture" class="block text-sm font-medium text-gray-700 mb-1">Soil Moisture (%)</label>
-                            <input type="number" id="soilMoisture" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 70–80%</p>
-                        </div>
-
-                       
-
-                        <div class="mb-4">
-                            <label for="nitrogen" class="block text-sm font-medium text-gray-700 mb-1">Nitrogen (N) kg/ha</label>
-                            <input type="number" id="nitrogen" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 120–150</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="phosphorus" class="block text-sm font-medium text-gray-700 mb-1">Phosphorus (P) kg/ha</label>
-                            <input type="number" id="phosphorus" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 40–60</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="potassium" class="block text-sm font-medium text-gray-700 mb-1">Potassium (K) kg/ha</label>
-                            <input type="number" id="potassium" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 40–60</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1">Temperature (°C)</label>
-                            <input type="number" step="0.1" id="temperature" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 28–32</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="humidity" class="block text-sm font-medium text-gray-700 mb-1">Humidity (%)</label>
-                            <input type="number" id="humidity" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 65–85</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="rainfall" class="block text-sm font-medium text-gray-700 mb-1">Rainfall (mm)</label>
-                            <input type="number" id="rainfall" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 1000–1200</p>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between mt-6">
-                        <button type="button" id="resetBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                            <i class="fas fa-redo mr-2"></i>Reset
-                        </button>
-                        <button type="button" id="calculateBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <i class="fas fa-calculator mr-2"></i>Calculate
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Results Column -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-green-700">Analysis Results</h2>
-                    <button id="diseaseBtn" class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <i class="fas fa-bug mr-1"></i>View Diseases
-                    </button>
-                </div>
-
-                <div id="resultsContainer" class="space-y-4">
-                    <div class="text-center py-8 text-gray-400">
-                        <i class="fas fa-leaf text-4xl mb-2"></i>
-                        <p>Enter parameters and click Calculate to see results</p>
-                    </div>
-                </div>
-            </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- INPUT PANEL · Tell us about your field -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold text-green-700 mb-4">📋 Your Field Details</h2>
+      <form id="cropForm" class="space-y-4" onsubmit="return false;">
+        <div>
+          <label class="text-sm font-medium text-gray-700">District name</label>
+          <select id="district" class="w-full mt-1 px-3 py-2 border rounded-md">
+            <option value="">-- choose district --</option>
+            <option>Lucknow</option><option>Agra</option><option>Gorakhpur</option><option>Varanasi</option><option>Jhansi</option>
+          </select>
         </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700">Soil type</label>
+          <select id="soilTexture" class="w-full mt-1 px-3 py-2 border rounded-md">
+            <option value="">-- choose soil type --</option>
+            <option>Clay Loam</option><option>Silty Clay Loam</option><option>Silty Loam</option><option>Clay</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div><label class="text-sm">Soil pH</label><input id="soilPh" step="0.1" type="number" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">good range: 6.0–6.8</p></div>
+          <div><label class="text-sm">Soil moisture (%)</label><input id="soilMoisture" type="number" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">good: 70–80%</p></div>
+          <div><label class="text-sm">Nitrogen (N) kg/ha</label><input id="nitrogen" type="number" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">good: 120–150</p></div>
+          <div><label class="text-sm">Phosphorus (P) kg/ha</label><input id="phosphorus" type="number" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">good: 40–60</p></div>
+          <div><label class="text-sm">Potassium (K) kg/ha</label><input id="potassium" type="number" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">good: 40–60</p></div>
+          <div><label class="text-sm">Temperature (°C)</label><input id="temperature" step="0.1" type="number" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">good: 28–32°C</p></div>
+          <div><label class="text-sm">Humidity (%)</label><input id="humidity" type="number" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">good: 65–85%</p></div>
+          <div><label class="text-sm">Rainfall (mm)</label><input id="rainfall" type="number" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">good: 1000–1200 mm</p></div>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" id="resetBtn" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"><i class="fas fa-redo mr-2"></i>Reset</button>
+          <button type="button" id="calculateBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"><i class="fas fa-calculator mr-2"></i>Calculate</button>
+        </div>
+      </form>
     </div>
 
-    <!-- Disease Modal -->
-    <div id="diseaseModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-green-800">Rice Disease Information</h3>
-                    <button id="closeModal" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disease</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Triggers</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symptoms</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prevention</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <!-- Rows will be inserted here by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- RESULTS · Your field report -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-green-700">📊 Your Field Report</h2>
+        <button id="diseaseBtn" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-md"><i class="fas fa-bug mr-1"></i>Disease info</button>
+      </div>
+      <button id="downloadImageBtn" class="mb-3 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md"><i class="fas fa-download mr-2"></i>Download report as image</button>
 
-    <!-- Fertilizer Modal -->
-    <div id="fertilizerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-green-800">Detailed Fertilizer Recommendations</h3>
-                    <button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <div id="fertilizerDetails">
-                    <!-- Content will be inserted by JavaScript -->
-                </div>
-            </div>
-        </div>
-    </div>
+      <div id="resultsContainer" class="space-y-4">
+        <div id="placeholderIntro" class="text-center py-8 text-gray-400"><i class="fas fa-leaf text-4xl mb-2"></i><p class="simple-english">Fill all details and click Calculate</p></div>
+        <div id="warningBox" class="hidden bg-red-100 border border-red-200 text-red-800 p-3 rounded-lg flex gap-2 items-center"><i class="fas fa-triangle-exclamation"></i><span id="warningText" class="simple-english">Please fill all fields</span></div>
+        <div id="loaderArea" class="hidden p-4 bg-white rounded-lg border"><div class="flex items-center gap-3"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div><div><div class="font-medium">Analyzing your field<span class="dots"></span></div><div class="text-xs text-gray-500">Just a moment...</div></div></div></div>
 
-    <script>
-        // District data
-        const districtData = [
-            {
-                "district": "Lucknow",
-                "pH": 6.9,
-                "moisture": 72,
-                "nitrogen": 198,
-                "phosphorus": 20,
-                "potassium": 174,
-                "temperature": 29.5,
-                "humidity": 78,
-                "rainfall": 920
-            },
-            {
-                "district": "Agra",
-                "pH": 6.3,
-                "moisture": 65,
-                "nitrogen": 190,
-                "phosphorus": 18,
-                "potassium": 180,
-                "temperature": 30.8,
-                "humidity": 70,
-                "rainfall": 890
-            },
-            {
-                "district": "Gorakhpur",
-                "pH": 6.6,
-                "moisture": 78,
-                "nitrogen": 220,
-                "phosphorus": 26,
-                "potassium": 165,
-                "temperature": 28.5,
-                "humidity": 84,
-                "rainfall": 1150
-            },
-            {
-                "district": "Varanasi",
-                "pH": 6.0,
-                "moisture": 68,
-                "nitrogen": 130,
-                "phosphorus": 27,
-                "potassium": 229,
-                "temperature": 30.2,
-                "humidity": 80,
-                "rainfall": 960
-            },
-            {
-                "district": "Jhansi",
-                "pH": 7.06,
-                "moisture": 64,
-                "nitrogen": 178,
-                "phosphorus": 8.5,
-                "potassium": 189,
-                "temperature": 31.2,
-                "humidity": 68,
-                "rainfall": 885
-            }
-        ];
-
-        // Soil texture ratings
-        const soilTextureRatings = {
-            "Clay Loam": 5,
-            "Silty Clay Loam": 4.5,
-            "Silty Loam": 4,
-            "Clay": 3,
-        };
-
-        // Disease data
-        const diseaseData = [
-            {
-                "name": "Blast Disease",
-                "triggers": "N > 160, Humidity > 85%, Moisture > 80%",
-                "symptoms": "Gray diamond spots",
-                "prevention": "Reduce N, space planting, use resistant varieties"
-            },
-            {
-                "name": "Bacterial Leaf Blight",
-                "triggers": "Humidity > 90%, Rainfall > 1200 mm",
-                "symptoms": "Leaf tip yellowing",
-                "prevention": "Clean seeds, reduce wounds, manage water"
-            },
-            {
-                "name": "Sheath Blight",
-                "triggers": "N > 150, Moisture > 85%, Dense sowing",
-                "symptoms": "Rot on lower sheath",
-                "prevention": "Less N, better spacing, early fungicide"
-            },
-            {
-                "name": "Brown Spot",
-                "triggers": "P < 40, K < 40, Rainfall < 900",
-                "symptoms": "Brown leaf spots with halo",
-                "prevention": "Balance P & K, irrigation, seed treatment"
-            },
-            {
-                "name": "Tungro Virus",
-                "triggers": "High humidity, Late sowing",
-                "symptoms": "Orange-yellow leaves, stunting",
-                "prevention": "Early sowing, vector control"
-            },
-            {
-                "name": "Stem Rot",
-                "triggers": "Continuous cropping, high organic matter",
-                "symptoms": "Hollow tillers, rot at base",
-                "prevention": "Crop rotation, drainage"
-            },
-            {
-                "name": "False Smut",
-                "triggers": "High humidity + rain at flowering",
-                "symptoms": "Green smut balls",
-                "prevention": "Remove infected grains, fungicide"
-            },
-            {
-                "name": "Leaf Scald",
-                "triggers": "Excess N, high humidity",
-                "symptoms": "Brown water-soaked lesions",
-                "prevention": "Split nitrogen doses"
-            },
-            {
-                "name": "Narrow Brown Spot",
-                "triggers": "K < 40, Excess N, low light",
-                "symptoms": "Narrow brown lesions",
-                "prevention": "Potassium-rich fertilizer"
-            }
-        ];
-
-        // Fertilizer recommendation data
-        const fertilizerData = [
-            {
-                "nutrient": "Nitrogen (N)",
-                "conditions": [
-                    {
-                        "range": "N < 100 kg/ha",
-                        "issues": [
-                            "Slow plant growth",
-                            "Yellowing of older leaves",
-                            "Low tillering",
-                            "Short panicles"
-                        ],
-                        "diseases": [
-                            "Stunted Growth",
-                            "Reduced grain yield",
-                            "Early leaf senescence"
-                        ],
-                        "fertilizer": {
-                            "type": "Urea",
-                            "recommended_kg_per_ha": "60–80",
-                            "application_method": "50% during transplanting, 50% at tillering"
-                        }
-                    },
-                    {
-                        "range": "100 ≤ N < 120 kg/ha",
-                        "issues": [
-                            "Light green leaves",
-                            "Moderate growth delay"
-                        ],
-                        "diseases": [
-                            "Low panicle number",
-                            "Poor grain filling"
-                        ],
-                        "fertilizer": {
-                            "type": "Urea",
-                            "recommended_kg_per_ha": "40–60",
-                            "application_method": "Split between early and mid-growth stages"
-                        }
-                    },
-                    {
-                        "range": "N > 150 kg/ha",
-                        "issues": [
-                            "Excessive vegetative growth",
-                            "Delayed maturity",
-                            "Lodging of plants"
-                        ],
-                        "diseases": [
-                            "Blast Disease",
-                            "Sheath Blight",
-                            "False Smut",
-                            "Leaf Scald",
-                            "Narrow Brown Spot"
-                        ],
-                        "fertilizer": {
-                            "type": "Urea",
-                            "recommended_kg_per_ha": "No Urea required",
-                            "application_method": "Avoid further N use; split in future cycles"
-                        }
-                    }
-                ]
-            },
-            {
-                "nutrient": "Phosphorus (P)",
-                "conditions": [
-                    {
-                        "range": "P < 40 kg/ha",
-                        "issues": [
-                            "Dark green or purplish leaves",
-                            "Delayed flowering and maturity",
-                            "Weak root system"
-                        ],
-                        "diseases": [
-                            "Brown Spot",
-                            "Delayed panicle emergence",
-                            "Tungro Virus risk increases"
-                        ],
-                        "fertilizer": {
-                            "type": "DAP",
-                            "recommended_kg_per_ha": "50–60",
-                            "application_method": "Apply during land prep or basal stage"
-                        }
-                    },
-                    {
-                        "range": "40 ≤ P ≤ 60 kg/ha",
-                        "issues": [
-                            "Mild growth limitations",
-                            "Slight delay in flowering"
-                        ],
-                        "diseases": [
-                            "Weak spikelet formation"
-                        ],
-                        "fertilizer": {
-                            "type": "DAP",
-                            "recommended_kg_per_ha": "30–40",
-                            "application_method": "Apply once at land prep or early tillering"
-                        }
-                    },
-                    {
-                        "range": "P > 60 kg/ha",
-                        "issues": [
-                            "Micronutrient lockout (Zinc, Iron)",
-                            "Nutrient imbalance"
-                        ],
-                        "diseases": [
-                            "No direct disease but reduced Zn/Fe absorption may lead to deficiency symptoms"
-                        ],
-                        "fertilizer": {
-                            "type": "DAP",
-                            "recommended_kg_per_ha": "No DAP required",
-                            "application_method": "Monitor for Zn deficiency; avoid further P use"
-                        }
-                    }
-                ]
-            },
-            {
-                "nutrient": "Potassium (K)",
-                "conditions": [
-                    {
-                        "range": "K < 40 kg/ha",
-                        "issues": [
-                            "Leaf margin yellowing or scorching",
-                            "Weak stems",
-                            "Increased lodging",
-                            "Poor water regulation"
-                        ],
-                        "diseases": [
-                            "Brown Spot",
-                            "Narrow Brown Spot",
-                            "Increased bacterial blight susceptibility"
-                        ],
-                        "fertilizer": {
-                            "type": "MOP",
-                            "recommended_kg_per_ha": "40–50",
-                            "application_method": "Split into basal + tillering stage"
-                        }
-                    },
-                    {
-                        "range": "40 ≤ K ≤ 60 kg/ha",
-                        "issues": [
-                            "Slight lodging risk",
-                            "Mild leaf edge discoloration"
-                        ],
-                        "diseases": [
-                            "Weakened stress tolerance"
-                        ],
-                        "fertilizer": {
-                            "type": "MOP",
-                            "recommended_kg_per_ha": "20–30",
-                            "application_method": "Apply once at early vegetative stage"
-                        }
-                    },
-                    {
-                        "range": "K > 60 kg/ha",
-                        "issues": [
-                            "Reduced Mg and Zn uptake",
-                            "Inhibited flowering under low light"
-                        ],
-                        "diseases": [
-                            "Indirect effects due to nutrient imbalance"
-                        ],
-                        "fertilizer": {
-                            "type": "MOP",
-                            "recommended_kg_per_ha": "No MOP required",
-                            "application_method": "Stop potash use; check for secondary deficiency"
-                        }
-                    }
-                ]
-            }
-        ];
-
-        // DOM elements
-        const districtSelect = document.getElementById('district');
-        const soilPhInput = document.getElementById('soilPh');
-        const soilMoistureInput = document.getElementById('soilMoisture');
-        const soilTextureInput = document.getElementById('soilTexture');
-        const nitrogenInput = document.getElementById('nitrogen');
-        const phosphorusInput = document.getElementById('phosphorus');
-        const potassiumInput = document.getElementById('potassium');
-        const temperatureInput = document.getElementById('temperature');
-        const humidityInput = document.getElementById('humidity');
-        const rainfallInput = document.getElementById('rainfall');
-        const calculateBtn = document.getElementById('calculateBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const resultsContainer = document.getElementById('resultsContainer');
-        const diseaseBtn = document.getElementById('diseaseBtn');
-        const diseaseModal = document.getElementById('diseaseModal');
-        const closeModal = document.getElementById('closeModal');
-        const diseaseTableBody = document.querySelector('#diseaseModal tbody');
-        const fertilizerModal = document.getElementById('fertilizerModal');
-        const closeFertilizerModal = document.getElementById('closeFertilizerModal');
-        const fertilizerDetails = document.getElementById('fertilizerDetails');
-
-        // Event listeners
-        districtSelect.addEventListener('change', fillDistrictData);
-        calculateBtn.addEventListener('click', calculateResults);
-        resetBtn.addEventListener('click', resetForm);
-        diseaseBtn.addEventListener('click', showDiseaseModal);
-        closeModal.addEventListener('click', hideDiseaseModal);
-        closeFertilizerModal.addEventListener('click', hideFertilizerModal);
-
-        // Populate disease table
-        function populateDiseaseTable() {
-            diseaseTableBody.innerHTML = '';
-            diseaseData.forEach(disease => {
-                const row = document.createElement('tr');
-                row.className = 'disease-row';
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${disease.name}</td>
-                    <td class="px-6 py-4 whitespace-normal text-sm text-gray-500">${disease.triggers}</td>
-                    <td class="px-6 py-4 whitespace-normal text-sm text-gray-500">${disease.symptoms}</td>
-                    <td class="px-6 py-4 whitespace-normal text-sm text-gray-500">${disease.prevention}</td>
-                `;
-                diseaseTableBody.appendChild(row);
-            });
-        }
-
-        // Show disease modal
-        function showDiseaseModal() {
-            populateDiseaseTable();
-            diseaseModal.classList.remove('hidden');
-        }
-
-        // Hide disease modal
-        function hideDiseaseModal() {
-            diseaseModal.classList.add('hidden');
-        }
-
-        // Show fertilizer modal
-        function showFertilizerModal(nitrogen, phosphorus, potassium) {
-            fertilizerDetails.innerHTML = generateFertilizerDetails(nitrogen, phosphorus, potassium);
-            fertilizerModal.classList.remove('hidden');
-        }
-
-        // Hide fertilizer modal
-        function hideFertilizerModal() {
-            fertilizerModal.classList.add('hidden');
-        }
-
-        // Generate fertilizer details
-        function generateFertilizerDetails(nitrogen, phosphorus, potassium) {
-            let html = '<div class="space-y-6">';
-            
-            // Nitrogen recommendations
-            html += '<div class="bg-blue-50 p-4 rounded-lg">';
-            html += '<h4 class="font-bold text-blue-800 mb-2">Nitrogen (N) Recommendations</h4>';
-            
-            const nCondition = getFertilizerCondition('Nitrogen (N)', nitrogen);
-            html += `<p class="font-medium">Current level: ${nitrogen} kg/ha (${nCondition.range})</p>`;
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Potential Issues:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            nCondition.issues.forEach(issue => {
-                html += `<li>${issue}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Disease Risks:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            nCondition.diseases.forEach(disease => {
-                html += `<li>${disease}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-           
-            html += '</div>';
-            html += '</div>';
-            
-            // Phosphorus recommendations
-            html += '<div class="bg-purple-50 p-4 rounded-lg">';
-            html += '<h4 class="font-bold text-purple-800 mb-2">Phosphorus (P) Recommendations</h4>';
-            
-            const pCondition = getFertilizerCondition('Phosphorus (P)', phosphorus);
-            html += `<p class="font-medium">Current level: ${phosphorus} kg/ha (${pCondition.range})</p>`;
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Potential Issues:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            pCondition.issues.forEach(issue => {
-                html += `<li>${issue}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Disease Risks:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            pCondition.diseases.forEach(disease => {
-                html += `<li>${disease}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
+        <!-- final results -->
+        <div id="finalResults" class="fade-in hidden space-y-4">
+          <div class="bg-green-50 p-4 rounded-lg"><div class="flex justify-between"><h3 class="font-medium text-green-800">🌱 Crop growth score</h3><span id="growthScoreLabel" class="text-xl font-bold text-green-700">0/100</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div id="growthBar" class="progress-bar bg-green-600 h-2.5 rounded-full" style="width:0%"></div></div></div>
           
-            html += '</div>';
-            html += '</div>';
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg"><h3 class="font-medium text-blue-800">⚖️ Expected yield</h3><p id="expectedYieldLabel" class="text-2xl font-bold text-blue-700">— kg/ha</p></div>
+            <div class="bg-purple-50 p-4 rounded-lg"><h3 class="font-medium text-purple-800">⚠️ Disease risk</h3><p id="diseaseRiskLabel" class="text-2xl font-bold text-red-600">—</p><p id="riskScoreLabel" class="text-xs text-gray-600">risk score 0%</p></div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-yellow-50 p-4 rounded-lg"><h3 class="font-medium text-yellow-800">🧪 Soil suitability</h3><div class="flex items-center"><span id="soilScoreLabel" class="text-2xl font-bold text-yellow-700 mr-2">0%</span><div class="w-full bg-gray-200 rounded-full h-2.5"><div id="soilBar" class="progress-bar bg-yellow-500 h-2.5 rounded-full" style="width:0%"></div></div></div></div>
+            <div class="bg-indigo-50 p-4 rounded-lg"><h3 class="font-medium text-indigo-800">☁️ Weather suitability</h3><div class="flex items-center"><span id="weatherScoreLabel" class="text-2xl font-bold text-indigo-700 mr-2">0%</span><div class="w-full bg-gray-200 rounded-full h-2.5"><div id="weatherBar" class="progress-bar bg-indigo-500 h-2.5 rounded-full" style="width:0%"></div></div></div></div>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-lg"><h3 class="font-medium text-gray-800">📝 Summary</h3><p id="matchSummaryLabel" class="text-lg font-semibold text-gray-800 simple-english">—</p></div>
+          
+          <!-- FERTILIZER RECOMMENDATION in simple English -->
+          <div class="bg-white border-2 border-green-200 p-4 rounded-lg">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-bold text-green-800">🧪 Fertilizer advice for your field</h3>
+              <button id="viewDetailsBtn" class="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700">How we calculate</button>
+            </div>
             
-            // Potassium recommendations
-            html += '<div class="bg-green-50 p-4 rounded-lg">';
-            html += '<h4 class="font-bold text-green-800 mb-2">Potassium (K) Recommendations</h4>';
+            <!-- Status badges -->
+            <div class="grid grid-cols-3 gap-2 mb-4">
+              <div class="text-center">
+                <span class="text-sm font-medium">Nitrogen (N)</span>
+                <div><span id="nStatusBadge" class="status-badge">—</span></div>
+              </div>
+              <div class="text-center">
+                <span class="text-sm font-medium">Phosphorus (P)</span>
+                <div><span id="pStatusBadge" class="status-badge">—</span></div>
+              </div>
+              <div class="text-center">
+                <span class="text-sm font-medium">Potassium (K)</span>
+                <div><span id="kStatusBadge" class="status-badge">—</span></div>
+              </div>
+            </div>
             
-            const kCondition = getFertilizerCondition('Potassium (K)', potassium);
-            html += `<p class="font-medium">Current level: ${potassium} kg/ha (${kCondition.range})</p>`;
+            <!-- Fertilizer doses -->
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div class="bg-blue-50 p-2 rounded text-center">
+                <div class="text-xs text-gray-600">Urea (kg per hectare)</div>
+                <div class="text-xl font-bold text-blue-700" id="ureaDose">0</div>
+              </div>
+              <div class="bg-purple-50 p-2 rounded text-center">
+                <div class="text-xs text-gray-600">DAP (kg per hectare)</div>
+                <div class="text-xl font-bold text-purple-700" id="dapDose">0</div>
+              </div>
+              <div class="bg-amber-50 p-2 rounded text-center">
+                <div class="text-xs text-gray-600">MOP (kg per hectare)</div>
+                <div class="text-xl font-bold text-amber-700" id="mopDose">0</div>
+              </div>
+            </div>
             
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Potential Issues:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            kCondition.issues.forEach(issue => {
-                html += `<li>${issue}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
+            <!-- How to apply · simple English -->
+            <div class="space-y-2 text-sm">
+              <div class="bg-green-50 p-2 rounded">
+                <span class="font-semibold">Nitrogen:</span> <span id="nitrogenMethodText" class="simple-english">—</span>
+              </div>
+              <div class="bg-green-50 p-2 rounded">
+                <span class="font-semibold">Phosphorus:</span> <span id="phosphorusMethodText" class="simple-english">—</span>
+              </div>
+              <div class="bg-green-50 p-2 rounded">
+                <span class="font-semibold">Potassium:</span> <span id="potassiumMethodText" class="simple-english">—</span>
+              </div>
+            </div>
             
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Disease Risks:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            kCondition.diseases.forEach(disease => {
-                html += `<li>${disease}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            
-            html += '</div>';
-            html += '</div>';
-            
-            // General fertilizer schedule
-            html += '<div class="bg-yellow-50 p-4 rounded-lg">';
-            html += '<h4 class="font-bold text-yellow-800 mb-2">General Fertilizer Application Schedule</h4>';
-            html += '<div class="overflow-x-auto">';
-            html += '<table class="min-w-full divide-y divide-gray-200">';
-            html += '<thead class="bg-yellow-100">';
-            html += '<tr>';
-            html += '<th class="px-4 py-2 text-left text-xs font-medium text-yellow-800 uppercase">Time</th>';
-            html += '<th class="px-4 py-2 text-left text-xs font-medium text-yellow-800 uppercase">Fertilizer to Apply</th>';
-            html += '</tr>';
-            html += '</thead>';
-            html += '<tbody class="bg-yellow-50 divide-y divide-yellow-200">';
-            html += '<tr>';
-            html += '<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">Basal (before/at transplanting)</td>';
-            html += '<td class="px-4 py-2 whitespace-normal text-sm text-gray-700">40–50 kg Urea + Full DAP (100–130 kg) + 25–30 kg MOP + 25 kg ZnSO₄</td>';
-            html += '</tr>';
-            html += '<tr>';
-            html += '<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">Tillering Stage (20–25 DAT)</td>';
-            html += '<td class="px-4 py-2 whitespace-normal text-sm text-gray-700">40–50 kg Urea + 20–25 kg MOP</td>';
-            html += '</tr>';
-            html += '<tr>';
-            html += '<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">Panicle Initiation (40–45 DAT)</td>';
-            html += '<td class="px-4 py-2 whitespace-normal text-sm text-gray-700">40–50 kg Urea</td>';
-            html += '</tr>';
-            html += '</tbody>';
-            html += '</table>';
-            html += '</div>';
-            html += '</div>';
-            
-            html += '</div>';
-            return html;
+            <!-- Warnings -->
+            <div id="fertilizerWarnings" class="mt-3 space-y-1"></div>
+          </div>
+
+          <!-- charts -->
+          <div class="bg-white p-3 rounded-lg border"><canvas id="compareChart" height="140"></canvas></div>
+          <div class="bg-white p-3 rounded-lg border"><canvas id="npkChart" height="110"></canvas></div>
+          <div class="bg-white p-3 rounded-lg border"><canvas id="fertBChart" height="110"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Disease modal -->
+<div id="diseaseModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto p-6">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🌾 Rice diseases and how to prevent</h3><button id="closeModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
+    <table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Disease</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">What causes it</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Symptoms</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">How to prevent</th></tr></thead><tbody id="diseaseTbody"></tbody></table>
+  </div>
+</div>
+
+<!-- How we calculate modal -->
+<div id="fertilizerModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold text-green-800">How we calculate your fertilizer</h3>
+      <button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="fertilizerDetails" class="space-y-4 simple-english"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ========================================================
+  // SCIENTIFIC FERTILIZER MODEL · Simple English version
+  // ========================================================
+  
+  function calculateRiceFertilizer(N, P, K) {
+    // Ideal amounts for rice
+    const ideals = {
+      N: { min: 120, max: 150, ideal: 135, sigma: 25, baseDose: 80, maintDose: 20 },
+      P: { min: 40, max: 60, ideal: 50, sigma: 12, baseDose: 60, maintDose: 20 },
+      K: { min: 40, max: 60, ideal: 50, sigma: 12, baseDose: 50, maintDose: 20 }
+    };
+
+    // Convert nutrient to fertilizer
+    // Urea has 46% N, DAP has 46% P2O5, MOP has 60% K2O
+    const conversion = {
+      NtoUrea: 2.17,  // 1 kg N needs 2.17 kg Urea
+      PtoDAP: 2.17,   // 1 kg P needs 2.17 kg DAP
+      KtoMOP: 1.67    // 1 kg K needs 1.67 kg MOP
+    };
+
+    let warnings = [];
+    let result = {
+      nitrogenStatus: "",
+      phosphorusStatus: "",
+      potassiumStatus: "",
+      ureaKgPerHa: 0,
+      dapKgPerHa: 0,
+      mopKgPerHa: 0,
+      applicationMethod: {
+        nitrogen: "",
+        phosphorus: "",
+        potassium: ""
+      },
+      warnings: warnings
+    };
+
+    // Gaussian function to calculate how suitable the nutrient level is
+    function calculateSuitability(value, ideal, sigma) {
+      const diff = value - ideal;
+      return Math.exp(-(diff * diff) / (2 * sigma * sigma));
+    }
+
+    // Calculate for N, P and K
+    ['N', 'P', 'K'].forEach(nutrient => {
+      const value = nutrient === 'N' ? N : (nutrient === 'P' ? P : K);
+      const config = ideals[nutrient];
+      
+      // How suitable is this value? (1 = perfect, 0 = very bad)
+      const suitability = calculateSuitability(value, config.ideal, config.sigma);
+      // How much deficiency? (1 - suitability)
+      const deficiency = 1 - suitability;
+      
+      // Decide if nutrient is low, good or high
+      let status;
+      if (value < config.min) status = "Deficient";      // too low
+      else if (value > config.max) status = "Excess";    // too high
+      else status = "Optimal";                            // just right
+      
+      // Save status
+      if (nutrient === 'N') result.nitrogenStatus = status;
+      else if (nutrient === 'P') result.phosphorusStatus = status;
+      else if (nutrient === 'K') result.potassiumStatus = status;
+      
+      // Calculate how much nutrient to add (kg/ha)
+      let nutrientDose = 0;
+      
+      if (value < config.ideal) {
+        // If nutrient is low: dose = baseDose × (deficiency ^ 1.5)
+        // The power 1.5 means: if deficiency is high, dose increases faster
+        nutrientDose = config.baseDose * Math.pow(deficiency, 1.5);
+        
+        // Special rule for very low potassium
+        if (nutrient === 'K' && value < 35) {
+          nutrientDose = nutrientDose * 1.1; // add 10% more
+          warnings.push("⚠️ Potassium is very low. Add 10% extra MOP to prevent lodging and brown spot.");
         }
-
-        // Get fertilizer condition based on value
-        function getFertilizerCondition(nutrient, value) {
-            const nutrientData = fertilizerData.find(item => item.nutrient === nutrient);
-            if (!nutrientData) return null;
-            
-            for (const condition of nutrientData.conditions) {
-                const range = condition.range;
-                if (range.includes('<')) {
-                    const parts = range.split('<');
-                    const threshold = parseFloat(parts[1].split(' ')[0]);
-                    if (value < threshold) return condition;
-                } 
-                else if (range.includes('≤')) {
-                    const parts = range.split('≤');
-                    const min = parseFloat(parts[0]);
-                    const max = parseFloat(parts[1].split(' ')[2]);
-                    if (value >= min && value <= max) return condition;
-                }
-                else if (range.includes('>')) {
-                    const parts = range.split('>');
-                    const threshold = parseFloat(parts[1].split(' ')[0]);
-                    if (value > threshold) return condition;
-                }
-            }
-            return nutrientData.conditions[0]; // Default to first condition
+        
+        // Round to nearest whole number
+        nutrientDose = Math.round(nutrientDose);
+        if (nutrientDose < 20) nutrientDose = 20; // always add at least 20 kg
+        
+      } else if (value <= config.max) {
+        // If nutrient is just right, add small maintenance dose
+        nutrientDose = config.maintDose;
+      } else {
+        // If nutrient is too high, add nothing and give warning
+        nutrientDose = 0;
+        if (nutrient === 'N' && value > 160) {
+          warnings.push("⚠️ Nitrogen is too high. Do not add urea. High N increases blast disease risk.");
+        } else if (nutrient === 'N') {
+          warnings.push("⚠️ Nitrogen is high. Too much N can cause diseases and lodging.");
+        } else if (nutrient === 'P') {
+          warnings.push("⚠️ Phosphorus is high. Too much P can cause zinc deficiency.");
+        } else if (nutrient === 'K') {
+          warnings.push("⚠️ Potassium is high. Too much K can reduce magnesium uptake.");
         }
-
-        // Fill form with district data
-        function fillDistrictData() {
-            const district = districtSelect.value;
-            if (district) {
-                const data = districtData.find(d => d.district === district);
-                if (data) {
-                    soilPhInput.value = data.pH;
-                    soilMoistureInput.value = data.moisture;
-                    nitrogenInput.value = data.nitrogen;
-                    phosphorusInput.value = data.phosphorus;
-                    potassiumInput.value = data.potassium;
-                    temperatureInput.value = data.temperature;
-                    humidityInput.value = data.humidity;
-                    rainfallInput.value = data.rainfall;
-                    soilTextureInput.value = ""; // Reset soil texture as it's not in district data
-                }
-            }
+      }
+      
+      // Convert nutrient dose to fertilizer amount and give application advice
+      if (nutrient === 'N') {
+        result.ureaKgPerHa = Math.round(nutrientDose * conversion.NtoUrea);
+        if (status === "Deficient") {
+          result.applicationMethod.nitrogen = 
+            "Split into three parts: 50% before planting, 25% at tillering (20-25 days), 25% at panicle initiation (50-55 days)";
+        } else if (status === "Optimal") {
+          result.applicationMethod.nitrogen = "Add small maintenance dose at tillering stage";
+        } else {
+          result.applicationMethod.nitrogen = "Do not add any nitrogen fertilizer";
         }
-
-        // Reset form
-        function resetForm() {
-            document.getElementById('cropForm').reset();
-            resultsContainer.innerHTML = `
-                <div class="text-center py-8 text-gray-400">
-                    <i class="fas fa-leaf text-4xl mb-2"></i>
-                    <p>Enter parameters and click Calculate to see results</p>
-                </div>
-            `;
+      } else if (nutrient === 'P') {
+        result.dapKgPerHa = Math.round(nutrientDose * conversion.PtoDAP);
+        if (status === "Deficient") {
+          result.applicationMethod.phosphorus = "Apply all at one time before planting. Mix well in soil.";
+        } else if (status === "Optimal") {
+          result.applicationMethod.phosphorus = "Add small maintenance dose before planting";
+        } else {
+          result.applicationMethod.phosphorus = "Do not add any phosphorus fertilizer";
         }
-
-        // Normalize value function
-        function normalize(value, min, max, ideal) {
-            if (value <= min || value >= max) return 0;
-            if (value === ideal) return 1;
-            
-            // Calculate distance from ideal
-            const distance = Math.abs(value - ideal);
-            const maxDistance = Math.max(ideal - min, max - ideal);
-            
-            // Quadratic decay for more severe penalty as we move away from ideal
-            return 1 - Math.pow(distance / maxDistance, 2);
+      } else if (nutrient === 'K') {
+        result.mopKgPerHa = Math.round(nutrientDose * conversion.KtoMOP);
+        if (status === "Deficient") {
+          result.applicationMethod.potassium = "Split into two parts: 50% before planting, 50% at panicle initiation";
+        } else if (status === "Optimal") {
+          result.applicationMethod.potassium = "Add small maintenance dose before planting";
+        } else {
+          result.applicationMethod.potassium = "Do not add any potassium fertilizer";
         }
+      }
+    });
 
-        // Calculate soil texture score
-        function getSoilTextureScore(texture) {
-            return soilTextureRatings[texture] || 0;
-        }
+    return result;
+  }
 
-        // Calculate results
-        function calculateResults() {
-            // Get input values
-            const soilPh = parseFloat(soilPhInput.value) || 0;
-            const soilMoisture = parseFloat(soilMoistureInput.value) || 0;
-            const soilTexture = soilTextureInput.value;
-            const nitrogen = parseFloat(nitrogenInput.value) || 0;
-            const phosphorus = parseFloat(phosphorusInput.value) || 0;
-            const potassium = parseFloat(potassiumInput.value) || 0;
-            const temperature = parseFloat(temperatureInput.value) || 0;
-            const humidity = parseFloat(humidityInput.value) || 0;
-            const rainfall = parseFloat(rainfallInput.value) || 0;
+  // ========================================================
+  // DISTRICT DATA AND OTHER FUNCTIONS
+  // ========================================================
+  const districtData = [
+    { district: "Lucknow", pH: 6.9, moisture: 72, nitrogen: 198, phosphorus: 20, potassium: 174, temperature: 29.5, humidity: 78, rainfall: 920 },
+    { district: "Agra", pH: 6.3, moisture: 65, nitrogen: 190, phosphorus: 18, potassium: 180, temperature: 30.8, humidity: 70, rainfall: 890 },
+    { district: "Gorakhpur", pH: 6.6, moisture: 78, nitrogen: 220, phosphorus: 26, potassium: 165, temperature: 28.5, humidity: 84, rainfall: 1150 },
+    { district: "Varanasi", pH: 6.0, moisture: 68, nitrogen: 130, phosphorus: 27, potassium: 229, temperature: 30.2, humidity: 80, rainfall: 960 },
+    { district: "Jhansi", pH: 7.06, moisture: 64, nitrogen: 178, phosphorus: 8.5, potassium: 189, temperature: 31.2, humidity: 68, rainfall: 885 }
+  ];
 
-            // Calculate scores
-            const growthScore = (
-                normalize(soilPh, 6.0, 6.8, 6.4) * 0.05 +
-                normalize(soilMoisture, 70, 80, 75) * 0.15 +
-                (soilTexture ? getSoilTextureScore(soilTexture.split(' ')[0]) / 5 * 0.10 : 0) + // 10% weight for soil texture
-                normalize(nitrogen, 120, 150, 135) * 0.23 +
-                normalize(phosphorus, 40, 60, 50) * 0.10 +
-                normalize(potassium, 40, 60, 50) * 0.10 +
-                normalize(temperature, 28, 32, 30) * 0.15 +
-                normalize(humidity, 65, 85, 75) * 0.10 +
-                normalize(rainfall, 1000, 1200, 1100) * 0.12
-            ) * 100;
+  const soilTextureRatings = { "Clay Loam": 5, "Silty Clay Loam": 4.5, "Silty Loam": 4, "Clay": 3 };
 
-            const soilScore = (
-                normalize(soilPh, 6.0, 6.8, 6.4) * 0.05 +
-                normalize(soilMoisture, 70, 80, 75) * 0.15 +
-                (soilTexture ? getSoilTextureScore(soilTexture.split(' ')[0]) / 5 * 0.20 : 0) + // Higher weight for soil texture in soil score
-                normalize(nitrogen, 120, 150, 135) * 0.23 +
-                normalize(phosphorus, 40, 60, 50) * 0.10 +
-                normalize(potassium, 40, 60, 50) * 0.10
-            ) * 100;
+  const diseaseData = [ 
+    { "name": "Blast Disease", "triggers": "Too much Nitrogen (>160), High humidity (>85%), Wet soil", "symptoms": "Gray diamond-shaped spots", "prevention": "Reduce nitrogen, plant with space, use resistant varieties" },
+    { "name": "Bacterial Leaf Blight", "triggers": "Very high humidity (>90%), Heavy rain (>1200 mm)", "symptoms": "Leaf tips turn yellow", "prevention": "Use clean seeds, manage water carefully" },
+    { "name": "Sheath Blight", "triggers": "High Nitrogen (>150), Wet soil (>85%), Dense planting", "symptoms": "Rot on lower part of stem", "prevention": "Use less nitrogen, give more space between plants" },
+    { "name": "Brown Spot", "triggers": "Low Potassium (<40), Low Phosphorus (<40), Less rain", "symptoms": "Brown spots with yellow ring", "prevention": "Add potassium and phosphorus, irrigate properly" },
+    { "name": "Tungro Virus", "triggers": "High humidity, Late planting", "symptoms": "Leaves turn orange-yellow, stunted growth", "prevention": "Plant early, control insects" },
+    { "name": "Stem Rot", "triggers": "Same field every year, too much nitrogen", "symptoms": "Hollow stems, rot at base", "prevention": "Rotate crops, balance nitrogen" },
+    { "name": "False Smut", "triggers": "High humidity + rain during flowering, excess nitrogen", "symptoms": "Green smut balls on grains", "prevention": "Remove infected grains, reduce nitrogen" },
+    { "name": "Leaf Scald", "triggers": "Too much nitrogen, high humidity", "symptoms": "Brown water-soaked lesions", "prevention": "Split nitrogen into multiple doses" },
+    { "name": "Narrow Brown Spot", "triggers": "Low Potassium (<40), Too much nitrogen", "symptoms": "Narrow brown spots", "prevention": "Add potassium fertilizer, reduce nitrogen" }
+  ];
 
-            const weatherScore = (
-                normalize(temperature, 28, 32, 30) * 0.15 +
-                normalize(humidity, 65, 85, 75) * 0.10 +
-                normalize(rainfall, 1000, 1200, 1100) * 0.12
-            ) * 100;
+  // DOM elements
+  const districtEl = document.getElementById('district');
+  const soilPh = document.getElementById('soilPh'), soilMoisture = document.getElementById('soilMoisture'), soilTexture = document.getElementById('soilTexture');
+  const nitrogen = document.getElementById('nitrogen'), phosphorus = document.getElementById('phosphorus'), potassium = document.getElementById('potassium');
+  const temperature = document.getElementById('temperature'), humidity = document.getElementById('humidity'), rainfall = document.getElementById('rainfall');
+  const calcBtn = document.getElementById('calculateBtn'), resetBtn = document.getElementById('resetBtn');
+  const loader = document.getElementById('loaderArea'), finalDiv = document.getElementById('finalResults'), placeholder = document.getElementById('placeholderIntro'), warnBox = document.getElementById('warningBox'), warnText = document.getElementById('warningText');
+  
+  // Result labels
+  const growthLbl = document.getElementById('growthScoreLabel'), growthBar = document.getElementById('growthBar');
+  const yieldLbl = document.getElementById('expectedYieldLabel');
+  const diseaseLbl = document.getElementById('diseaseRiskLabel'), riskScoreLbl = document.getElementById('riskScoreLabel');
+  const soilScoreLbl = document.getElementById('soilScoreLabel'), soilBar = document.getElementById('soilBar');
+  const weatherScoreLbl = document.getElementById('weatherScoreLabel'), weatherBar = document.getElementById('weatherBar');
+  const summaryLbl = document.getElementById('matchSummaryLabel');
+  
+  // Fertilizer elements
+  const nStatusBadge = document.getElementById('nStatusBadge');
+  const pStatusBadge = document.getElementById('pStatusBadge');
+  const kStatusBadge = document.getElementById('kStatusBadge');
+  const ureaDose = document.getElementById('ureaDose');
+  const dapDose = document.getElementById('dapDose');
+  const mopDose = document.getElementById('mopDose');
+  const nitrogenMethodText = document.getElementById('nitrogenMethodText');
+  const phosphorusMethodText = document.getElementById('phosphorusMethodText');
+  const potassiumMethodText = document.getElementById('potassiumMethodText');
+  const fertilizerWarnings = document.getElementById('fertilizerWarnings');
+  
+  const viewDetails = document.getElementById('viewDetailsBtn');
+  const downloadBtn = document.getElementById('downloadImageBtn');
+  const diseaseBtn = document.getElementById('diseaseBtn'), diseaseModal = document.getElementById('diseaseModal'), closeModal = document.getElementById('closeModal');
+  const fertModal = document.getElementById('fertilizerModal'), closeFertModal = document.getElementById('closeFertilizerModal'), fertDetails = document.getElementById('fertilizerDetails');
+  
+  let charts = { compare: null, npk: null, fertB: null };
 
-            // Calculate expected yield (2500-3300 range)
-            const expectedYield = 2200 + (growthScore / 100) * (3200 - 2200);
+  // Helper functions
+  function softNormalize(value, min, max, ideal) {
+    if (isNaN(value) || value === null) return 0;
+    const sigma = (max - min) / 4;
+    const diff = value - ideal;
+    return Math.exp(-(diff * diff) / (2 * sigma * sigma));
+  }
 
-            // Determine disease risk
-            let diseaseRisk = "Low";
-            let diseaseRiskColor = "text-green-600";
-            if (humidity > 85 || nitrogen > 160) {
-                diseaseRisk = "Medium";
-                diseaseRiskColor = "text-yellow-600";
-            }
-            if (humidity > 90 || nitrogen > 180 || soilPh < 5.5 || soilPh > 7.5) {
-                diseaseRisk = "High";
-                diseaseRiskColor = "text-red-600";
-            }
+  function getTextureScore(texture) {
+    return soilTextureRatings[texture] || 0;
+  }
 
-            // Determine match summary
-            let matchSummary = "";
-            let matchColor = "";
-            if (growthScore >= 85) {
-                matchSummary = "Excellent conditions for rice cultivation";
-                matchColor = "text-green-600";
-            } else if (growthScore >= 70) {
-                matchSummary = "Good conditions for rice cultivation";
-                matchColor = "text-blue-600";
-            } else {
-                matchSummary = "Unsuitable or risky conditions";
-                matchColor = "text-red-600";
-            }
+  function calculateSoilScore(ph, moisture, texture) {
+    const phNorm = softNormalize(ph, 5.5, 7.5, 6.4);
+    const moistNorm = softNormalize(moisture, 60, 90, 75);
+    const texScore = getTextureScore(texture) / 5;
+    return (phNorm * 0.4 + moistNorm * 0.4 + texScore * 0.2) * 100;
+  }
 
-            // Soil texture rating
-            let soilTextureRating = "";
-            if (soilTexture) {
-                const textureName = soilTexture.split(' ')[0];
-                const rating = soilTextureRatings[textureName] || 0;
-                soilTextureRating = `
-                    <div class="flex items-center mt-1">
-                        <span class="text-sm text-gray-700 mr-2">Texture Rating:</span>
-                        <span class="star-rating">
-                            ${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}${'☆'.repeat(5 - Math.ceil(rating))}
-                        </span>
-                    </div>
-                `;
-            }
+  function calculateNutrientScore(N, P, K) {
+    const nNorm = softNormalize(N, 80, 200, 135);
+    const pNorm = softNormalize(P, 20, 90, 50);
+    const kNorm = softNormalize(K, 20, 90, 50);
+    return (nNorm * 0.5 + pNorm * 0.25 + kNorm * 0.25) * 100;
+  }
 
-            // Fertilizer recommendations
-            let ureaRecommendation = "";
-            if (nitrogen < 100) ureaRecommendation = "Add 60–80 kg/ha Urea (split basal + tillering)";
-            else if (nitrogen < 120) ureaRecommendation = "Add 40–60 kg/ha Urea";
-            else if (nitrogen > 150) ureaRecommendation = "No Urea needed";
-            else ureaRecommendation = "Add 20–30 kg/ha Urea";
+  function calculateWeatherScore(temp, hum, rain) {
+    const tNorm = softNormalize(temp, 22, 36, 30);
+    const hNorm = softNormalize(hum, 55, 95, 75);
+    const rNorm = softNormalize(rain, 800, 1500, 1100);
+    return (tNorm * 0.4 + hNorm * 0.3 + rNorm * 0.3) * 100;
+  }
 
-            let dapRecommendation = "";
-            if (phosphorus < 40) dapRecommendation = "Add 50–60 kg/ha DAP";
-            else if (phosphorus <= 60) dapRecommendation = "Add 30–40 kg/ha DAP";
-            else dapRecommendation = "No DAP needed";
+  function sigmoidGrowth(soilSc, nutrSc, weatherSc) {
+    let raw = soilSc * 0.4 + nutrSc * 0.35 + weatherSc * 0.25;
+    const k = 0.08, midpoint = 50;
+    return 100 / (1 + Math.exp(-k * (raw - midpoint)));
+  }
 
-            let mopRecommendation = "";
-            if (potassium < 40) mopRecommendation = "Add 40–50 kg/ha MOP";
-            else if (potassium <= 60) mopRecommendation = "Add 20–30 kg/ha MOP";
-            else mopRecommendation = "No MOP needed";
+  function logisticYield(finalGrowth) {
+    const yMin = 2200, yMax = 3400;
+    return yMin + (yMax - yMin) / (1 + Math.exp(-0.1 * (finalGrowth - 60)));
+  }
 
-            // Display results
-            resultsContainer.innerHTML = `
-                <div class="bg-green-50 p-4 rounded-lg mb-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-medium text-green-800">Growth Score</h3>
-                        <span class="text-xl font-bold text-green-700">${Math.round(growthScore)}/100</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div class="progress-bar bg-green-600 h-2.5 rounded-full" style="width: ${growthScore}%"></div>
-                    </div>
-                </div>
+  function computeDiseaseRisk(humidity, nitrogen, soilMoisture, pH) {
+    let risk = 0;
+    if (humidity > 85) risk += 30;
+    if (nitrogen > 160) risk += 30;
+    if (soilMoisture > 80) risk += 20;
+    if (pH < 5.5 || pH > 7.5) risk += 20;
+    risk = Math.min(risk, 100);
+    let level = 'Low';
+    if (risk > 60) level = 'High';
+    else if (risk > 30) level = 'Medium';
+    return { level, score: risk };
+  }
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-blue-800 mb-1">Expected Yield</h3>
-                        <p class="text-2xl font-bold text-blue-700">${Math.round(expectedYield)} kg/ha</p>
-                    </div>
+  function performAnalysis() {
+    const ph = parseFloat(soilPh.value) || 0, moist = parseFloat(soilMoisture.value) || 0;
+    const texture = soilTexture.value;
+    const N = parseFloat(nitrogen.value) || 0, P = parseFloat(phosphorus.value) || 0, K = parseFloat(potassium.value) || 0;
+    const temp = parseFloat(temperature.value) || 0, hum = parseFloat(humidity.value) || 0, rain = parseFloat(rainfall.value) || 0;
 
-                    <div class="bg-purple-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-purple-800 mb-1">Disease Risk</h3>
-                        <p class="text-2xl font-bold ${diseaseRiskColor}">${diseaseRisk}</p>
-                    </div>
-                </div>
+    const soilSc = calculateSoilScore(ph, moist, texture);
+    const nutrSc = calculateNutrientScore(N, P, K);
+    const weatherSc = calculateWeatherScore(temp, hum, rain);
+    const growth = sigmoidGrowth(soilSc, nutrSc, weatherSc);
+    const growthRounded = Math.min(100, Math.max(0, Math.round(growth)));
+    const yieldVal = logisticYield(growth);
+    const yieldRounded = Math.round(yieldVal);
+    const disease = computeDiseaseRisk(hum, N, moist, ph);
+    
+    let summary = '';
+    if (growthRounded >= 75) summary = 'Excellent conditions for rice. Good yield expected.';
+    else if (growthRounded >= 55) summary = 'Good conditions. Your field is suitable for rice.';
+    else summary = 'Difficult conditions. Check risks and follow advice carefully.';
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div class="bg-yellow-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-yellow-800 mb-1">Soil Compatibility</h3>
-                        <div class="flex items-center">
-                            <span class="text-2xl font-bold text-yellow-700 mr-2">${Math.round(soilScore)}%</span>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="progress-bar bg-yellow-500 h-2.5 rounded-full" style="width: ${soilScore}%"></div>
-                            </div>
-                        </div>
-                        ${soilTextureRating}
-                    </div>
+    // Get fertilizer recommendations
+    const fertRec = calculateRiceFertilizer(N, P, K);
 
-                    <div class="bg-indigo-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-indigo-800 mb-1">Weather Compatibility</h3>
-                        <div class="flex items-center">
-                            <span class="text-2xl font-bold text-indigo-700 mr-2">${Math.round(weatherScore)}%</span>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="progress-bar bg-indigo-500 h-2.5 rounded-full" style="width: ${weatherScore}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    return {
+      growth: growthRounded,
+      soil: Math.round(soilSc),
+      weather: Math.round(weatherSc),
+      yield: yieldRounded,
+      diseaseLevel: disease.level,
+      diseaseScore: disease.score,
+      summary,
+      N, P, K,
+      fertRec
+    };
+  }
 
-                <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                    <h3 class="font-medium text-gray-800 mb-1">Match Summary</h3>
-                    <p class="text-lg font-semibold ${matchColor}">${matchSummary}</p>
-                </div>
+  function renderResults(d) {
+    growthLbl.textContent = d.growth + '/100';
+    growthBar.style.width = d.growth + '%';
+    yieldLbl.textContent = d.yield + ' kg/ha';
+    diseaseLbl.textContent = d.diseaseLevel;
+    diseaseLbl.className = `text-2xl font-bold ${d.diseaseLevel==='Low'?'text-green-600': d.diseaseLevel==='Medium'?'text-yellow-600':'text-red-600'}`;
+    riskScoreLbl.textContent = `risk score ${d.diseaseScore}%`;
+    soilScoreLbl.textContent = d.soil + '%'; soilBar.style.width = d.soil + '%';
+    weatherScoreLbl.textContent = d.weather + '%'; weatherBar.style.width = d.weather + '%';
+    summaryLbl.textContent = d.summary;
 
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-medium text-gray-800">Fertilizer Recommendations</h3>
-                        <button id="viewDetailsBtn" class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded hover:bg-green-200">
-                            View Details
-                        </button>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex items-start">
-                            <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-2">Urea</span>
-                            <p>${ureaRecommendation}</p>
-                        </div>
-                        <div class="flex items-start">
-                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2">DAP</span>
-                            <p>${dapRecommendation}</p>
-                        </div>
-                        <div class="flex items-start">
-                            <span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded mr-2">MOP</span>
-                            <p>${mopRecommendation}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+    // Update fertilizer
+    const f = d.fertRec;
+    
+    nStatusBadge.textContent = f.nitrogenStatus;
+    pStatusBadge.textContent = f.phosphorusStatus;
+    kStatusBadge.textContent = f.potassiumStatus;
+    
+    nStatusBadge.className = `status-badge status-${f.nitrogenStatus.toLowerCase()}`;
+    pStatusBadge.className = `status-badge status-${f.phosphorusStatus.toLowerCase()}`;
+    kStatusBadge.className = `status-badge status-${f.potassiumStatus.toLowerCase()}`;
+    
+    ureaDose.textContent = f.ureaKgPerHa;
+    dapDose.textContent = f.dapKgPerHa;
+    mopDose.textContent = f.mopKgPerHa;
+    
+    nitrogenMethodText.textContent = f.applicationMethod.nitrogen;
+    phosphorusMethodText.textContent = f.applicationMethod.phosphorus;
+    potassiumMethodText.textContent = f.applicationMethod.potassium;
+    
+    fertilizerWarnings.innerHTML = '';
+    f.warnings.forEach(w => {
+      const warnEl = document.createElement('div');
+      warnEl.className = 'text-xs p-2 bg-yellow-50 text-yellow-800 rounded border border-yellow-200 simple-english';
+      warnEl.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i>${w}`;
+      fertilizerWarnings.appendChild(warnEl);
+    });
 
-            // Add event listener for view details button
-            document.getElementById('viewDetailsBtn').addEventListener('click', () => {
-                showFertilizerModal(nitrogen, phosphorus, potassium);
-            });
-        }
+    // Charts
+    const ctxComp = document.getElementById('compareChart').getContext('2d');
+    if (charts.compare) charts.compare.destroy();
+    charts.compare = new Chart(ctxComp, {
+      type: 'bar', 
+      data: { 
+        labels: ['Growth', 'Soil', 'Weather'], 
+        datasets: [{ 
+          label: 'score', 
+          data: [d.growth, d.soil, d.weather], 
+          backgroundColor: ['#16a34a','#f59e0b','#0ea5e9'] 
+        }]
+      },
+      options: { 
+        responsive: true, 
+        plugins: { legend: { display: false } }, 
+        scales: { y: { max: 100, beginAtZero: true } } 
+      }
+    });
 
-        // Initialize disease table
-        populateDiseaseTable();
-    </script>
+    const ctxNpk = document.getElementById('npkChart').getContext('2d');
+    if (charts.npk) charts.npk.destroy();
+    charts.npk = new Chart(ctxNpk, {
+      type: 'bar', 
+      data: { 
+        labels: ['N', 'P', 'K'], 
+        datasets: [{ 
+          label: 'kg per hectare', 
+          data: [d.N, d.P, d.K], 
+          backgroundColor: ['#15803d','#0ea5e9','#7c3aed'] 
+        }]
+      },
+      options: { plugins: { legend: { display: false } } }
+    });
+
+    const nDef = Math.round(softNormalize(d.N, 80,200,135)*100);
+    const pDef = Math.round(softNormalize(d.P, 20,90,50)*100);
+    const kDef = Math.round(softNormalize(d.K, 20,90,50)*100);
+    const ctxB = document.getElementById('fertBChart').getContext('2d');
+    if (charts.fertB) charts.fertB.destroy();
+    charts.fertB = new Chart(ctxB, {
+      type: 'bar', 
+      data: { 
+        labels: ['N fit', 'P fit', 'K fit'], 
+        datasets: [{ 
+          label: 'suitability %', 
+          data: [nDef, pDef, kDef], 
+          backgroundColor: ['#16a34a','#0ea5e9','#f59e0b'] 
+        }]
+      },
+      options: { 
+        plugins: { legend: { display: false } }, 
+        scales: { y: { max:100, beginAtZero: true } } 
+      }
+    });
+
+    finalDiv.classList.remove('hidden');
+    setTimeout(() => finalDiv.classList.add('show'), 20);
+  }
+
+  function allFilled() {
+    return [districtEl.value, soilTexture.value, soilPh.value, soilMoisture.value, nitrogen.value, phosphorus.value, potassium.value, temperature.value, humidity.value, rainfall.value].every(v => v && v.toString().trim()!=='');
+  }
+
+  calcBtn.addEventListener('click', () => {
+    warnBox.classList.add('hidden');
+    if (!allFilled()) {
+      warnText.textContent = '⚠ Please fill all fields (district, soil type and all numbers)';
+      warnBox.classList.remove('hidden');
+      placeholder.classList.remove('hidden');
+      loader.classList.add('hidden');
+      finalDiv.classList.add('hidden');
+      return;
+    }
+    placeholder.classList.add('hidden');
+    finalDiv.classList.add('hidden');
+    loader.classList.remove('hidden');
+
+    setTimeout(() => {
+      const res = performAnalysis();
+      loader.classList.add('hidden');
+      renderResults(res);
+    }, 1000);
+  });
+
+  districtEl.addEventListener('change', () => {
+    const d = districtData.find(x => x.district === districtEl.value);
+    if (!d) return;
+    soilPh.value = d.pH; soilMoisture.value = d.moisture; nitrogen.value = d.nitrogen;
+    phosphorus.value = d.phosphorus; potassium.value = d.potassium;
+    temperature.value = d.temperature; humidity.value = d.humidity; rainfall.value = d.rainfall;
+    soilTexture.value = '';
+  });
+
+  resetBtn.addEventListener('click', () => {
+    document.getElementById('cropForm').reset();
+    finalDiv.classList.add('hidden'); finalDiv.classList.remove('show');
+    loader.classList.add('hidden');
+    placeholder.classList.remove('hidden');
+    warnBox.classList.add('hidden');
+    Object.values(charts).forEach(ch => { if(ch) ch.destroy(); });
+    charts = { compare: null, npk: null, fertB: null };
+  });
+
+  function populateDiseaseTable() {
+    const tbody = document.getElementById('diseaseTbody');
+    tbody.innerHTML = '';
+    diseaseData.forEach(d => {
+      const tr = document.createElement('tr'); tr.className = 'disease-row';
+      tr.innerHTML = `<td class="px-6 py-4 font-medium">${d.name}</td><td class="px-6 py-4 text-sm">${d.triggers}</td><td class="px-6 py-4 text-sm">${d.symptoms}</td><td class="px-6 py-4 text-sm">${d.prevention}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  populateDiseaseTable();
+  
+  diseaseBtn.addEventListener('click', () => diseaseModal.classList.remove('hidden'));
+  closeModal.addEventListener('click', () => diseaseModal.classList.add('hidden'));
+
+  viewDetails.addEventListener('click', () => {
+    const N = parseFloat(nitrogen.value) || 0, P = parseFloat(phosphorus.value) || 0, K = parseFloat(potassium.value) || 0;
+    const fert = calculateRiceFertilizer(N, P, K);
+    
+    fertDetails.innerHTML = `
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <h4 class="font-bold text-lg mb-2">📊 Step 1: Calculate nutrient suitability</h4>
+        <p class="text-sm mb-1">Nitrogen suitability = ${Math.round(softNormalize(N,80,200,135)*100)}% (100% is perfect)</p>
+        <p class="text-sm mb-1">Phosphorus suitability = ${Math.round(softNormalize(P,20,90,50)*100)}%</p>
+        <p class="text-sm">Potassium suitability = ${Math.round(softNormalize(K,20,90,50)*100)}%</p>
+      </div>
+      <div class="bg-green-50 p-4 rounded-lg">
+        <h4 class="font-bold text-lg mb-2">🧪 Step 2: Find deficiency</h4>
+        <p class="text-sm mb-1">N deficiency = ${(1 - softNormalize(N,80,200,135)).toFixed(3)}</p>
+        <p class="text-sm mb-1">P deficiency = ${(1 - softNormalize(P,20,90,50)).toFixed(3)}</p>
+        <p class="text-sm">K deficiency = ${(1 - softNormalize(K,20,90,50)).toFixed(3)}</p>
+        <p class="text-xs mt-1">(0 = no deficiency, 1 = completely deficient)</p>
+      </div>
+      <div class="bg-purple-50 p-4 rounded-lg">
+        <h4 class="font-bold text-lg mb-2">⚗️ Step 3: Calculate dose (deficiency raised to power 1.5)</h4>
+        <p class="text-sm mb-1">N dose factor = ${Math.pow(1 - softNormalize(N,80,200,135), 1.5).toFixed(3)}</p>
+        <p class="text-sm mb-1">P dose factor = ${Math.pow(1 - softNormalize(P,20,90,50), 1.5).toFixed(3)}</p>
+        <p class="text-sm">K dose factor = ${Math.pow(1 - softNormalize(K,20,90,50), 1.5).toFixed(3)}</p>
+        <p class="text-xs mt-1">This number is multiplied by base dose (80/60/50) to get final recommendation</p>
+      </div>
+    `;
+    fertModal.classList.remove('hidden');
+  });
+
+  closeFertModal.addEventListener('click', () => fertModal.classList.add('hidden'));
+
+  downloadBtn.addEventListener('click', () => {
+    html2canvas(document.body, { scale: 1.5 }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `farmer_friend_${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }).catch(console.warn);
+  });
+})();
+</script>
 </body>
 </html>
-
-
