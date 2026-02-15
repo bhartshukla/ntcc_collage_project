@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Farmer Friend · Advanced Rice Analysis + UP Stage & Profit (FIXED)</title>
+  <title>Farmer Friend · Advanced Rice Analysis + UP Stage & Profit (Voice Enhanced)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -35,13 +35,73 @@
     .profit-card { background: #f9fafb; border-radius: 12px; padding: 16px; border-left: 4px solid #16a34a; }
     .comparison-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ccc; }
     .text-red-600 { color: #dc2626; }
+    
+    /* ===== ENHANCED VOICE BUTTON STYLES ===== */
+    .voice-btn { 
+      background-color: #f59e0b; 
+      color: white; 
+      padding: 8px 20px; 
+      border-radius: 9999px; 
+      font-size: 0.95rem; 
+      font-weight: 500; 
+      transition: all 0.3s ease; 
+      border: none; 
+      cursor: pointer; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .voice-btn:hover:not(:disabled) { 
+      background-color: #d97706; 
+      transform: scale(1.02);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .voice-btn:active:not(:disabled) { 
+      transform: scale(0.98);
+    }
+    .voice-btn i { 
+      font-size: 1.2rem; 
+    }
+    .voice-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: #9ca3af;
+    }
+    
+    /* Pulse animation while speaking */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); }
+      100% { transform: scale(1); }
+    }
+    
+    .voice-btn.speaking {
+      background-color: #dc2626;
+      animation: pulse 1.5s infinite;
+    }
+    
+    .voice-btn.speaking i {
+      animation: spin 2s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Microphone icon animation */
+    .fa-microphone, .fa-stop, .fa-volume-up {
+      transition: all 0.3s;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-slate-800">
 
 <div class="container mx-auto px-4 py-8">
   <header class="mb-6 text-center">
-    <h1 class="text-3xl font-bold text-green-800 mb-1"> Farmer Friend · Advanced Rice Analysis (UP Stage & Profit)</h1>
+    <h1 class="text-3xl font-bold text-green-800 mb-1">🌾 Farmer Friend · Advanced Rice Analysis (UP Stage & Profit)</h1>
     <p class="text-gray-600 simple-english">Uttar Pradesh specific stage penalties, economic view, best possible growth</p>
   </header>
 
@@ -52,7 +112,7 @@
       
       <!-- CROP STAGE SELECTOR -->
       <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <label class="text-sm font-medium text-gray-700 block mb-1"> Crop stage (Uttar Pradesh)</label>
+        <label class="text-sm font-medium text-gray-700 block mb-1">🌾 Crop stage (Uttar Pradesh)</label>
         <select id="cropStage" class="w-full px-3 py-2 border rounded-md">
           <option value="nursery">Nursery (0–20 days)</option>
           <option value="tillering">Tillering (20–45 days)</option>
@@ -98,7 +158,7 @@
     <!-- RESULTS SECTION -->
     <div class="bg-white p-6 rounded-lg shadow-md">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold text-green-700">Advanced Field Report</h2>
+        <h2 class="text-xl font-semibold text-green-700">📊 Advanced Field Report</h2>
         <button id="diseaseBtn" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-md"><i class="fas fa-bug mr-1"></i>Disease info</button>
       </div>
       <button id="downloadImageBtn" class="mb-3 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md"><i class="fas fa-download mr-2"></i>Download report</button>
@@ -114,13 +174,21 @@
         <div id="warningBox" class="hidden bg-red-100 border border-red-200 text-red-800 p-3 rounded-lg flex gap-2 items-center"><i class="fas fa-triangle-exclamation"></i><span id="warningText" class="simple-english">Please fill all fields</span></div>
         <div id="loaderArea" class="hidden p-4 bg-white rounded-lg border"><div class="flex items-center gap-3"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div><div><div class="font-medium">Analyzing your field<span class="dots"></span></div><div class="text-xs text-gray-500">Just a moment...</div></div></div></div>
 
-        <!-- ANALYSIS SECTION - FIXED: Removed fade-in class -->
+        <!-- ANALYSIS SECTION -->
         <div id="analysisSection" class="space-y-4">
+          <!-- ENHANCED VOICE BUTTON with toggle functionality -->
+          <div class="flex justify-end">
+            <button id="listenBtn" class="voice-btn" disabled>
+              <i class="fas fa-microphone"></i>
+              <span class="btn-text">🔊 Listen Report</span>
+            </button>
+          </div>
+          
           <div id="finalResults" class="space-y-4">
             <!-- Growth Scores -->
             <div class="bg-green-50 p-4 rounded-lg">
               <div class="flex justify-between mb-2">
-                <h3 class="font-medium text-green-800"> Raw growth score</h3>
+                <h3 class="font-medium text-green-800">🌱 Raw growth score</h3>
                 <span id="growthRawLabel" class="text-lg font-bold text-green-700">0/100</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2.5 mb-3">
@@ -128,7 +196,7 @@
               </div>
               
               <div class="flex justify-between">
-                <h3 class="font-medium text-green-800"> Adjusted growth (with disease & heat)</h3>
+                <h3 class="font-medium text-green-800">🌾 Adjusted growth (with disease & heat)</h3>
                 <span id="growthAdjustedLabel" class="text-lg font-bold text-green-700">0/100</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2.5">
@@ -139,11 +207,11 @@
             <!-- Yield and Disease -->
             <div class="grid grid-cols-2 gap-4">
               <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-medium text-blue-800"> Expected yield</h3>
+                <h3 class="font-medium text-blue-800">⚖️ Expected yield</h3>
                 <p id="expectedYieldLabel" class="text-2xl font-bold text-blue-700">— kg/ha</p>
               </div>
               <div class="bg-purple-50 p-4 rounded-lg">
-                <h3 class="font-medium text-purple-800"> Disease risk</h3>
+                <h3 class="font-medium text-purple-800">⚠️ Disease risk</h3>
                 <p id="diseaseRiskLabel" class="text-2xl font-bold text-red-600">—</p>
                 <p id="riskScoreLabel" class="text-xs text-gray-600">score 0%</p>
               </div>
@@ -152,12 +220,12 @@
             <!-- Soil and Weather -->
             <div class="grid grid-cols-2 gap-4">
               <div class="bg-yellow-50 p-4 rounded-lg">
-                <h3 class="font-medium text-yellow-800"> Soil suitability</h3>
+                <h3 class="font-medium text-yellow-800">🧪 Soil suitability</h3>
                 <div class="flex items-center"><span id="soilScoreLabel" class="text-2xl font-bold text-yellow-700 mr-2">0%</span>
                 <div class="w-full bg-gray-200 rounded-full h-2.5"><div id="soilBar" class="progress-bar bg-yellow-500 h-2.5 rounded-full" style="width:0%"></div></div></div>
               </div>
               <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-medium text-indigo-800"> Weather suitability</h3>
+                <h3 class="font-medium text-indigo-800">☁️ Weather suitability</h3>
                 <div class="flex items-center"><span id="weatherScoreLabel" class="text-2xl font-bold text-indigo-700 mr-2">0%</span>
                 <div class="w-full bg-gray-200 rounded-full h-2.5"><div id="weatherBar" class="progress-bar bg-indigo-500 h-2.5 rounded-full" style="width:0%"></div></div></div>
               </div>
@@ -165,7 +233,7 @@
             
             <!-- Sensitivity Analysis -->
             <div class="bg-white border border-gray-200 p-4 rounded-lg">
-              <h3 class="font-medium text-gray-800 mb-3"> What affects your crop most?</h3>
+              <h3 class="font-medium text-gray-800 mb-3">📊 What affects your crop most?</h3>
               <div class="space-y-2">
                 <div><div class="flex justify-between text-sm"><span>Soil</span><span id="soilPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="soilPercentBar" class="sensitivity-bar bg-yellow-500" style="width:0%"></div></div></div>
                 <div><div class="flex justify-between text-sm"><span>Nutrients</span><span id="nutrientPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="nutrientPercentBar" class="sensitivity-bar bg-green-500" style="width:0%"></div></div></div>
@@ -176,7 +244,7 @@
             <!-- FERTILIZER RECOMMENDATION -->
             <div class="bg-white border-2 border-green-200 p-4 rounded-lg">
               <div class="flex justify-between items-center mb-3">
-                <h3 class="font-bold text-green-800">Fertilizer advice (with efficiency factor)</h3>
+                <h3 class="font-bold text-green-800">🧪 Fertilizer advice (with efficiency factor)</h3>
                 <button id="viewDetailsBtn" class="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700">How we calculate</button>
               </div>
               <div class="grid grid-cols-3 gap-2 mb-4">
@@ -207,7 +275,7 @@
         <!-- PROFIT SECTION (hidden by default) -->
         <div id="profitSection" class="hidden space-y-4">
           <div class="bg-gradient-to-r from-emerald-50 to-green-50 p-5 rounded-xl border border-green-200">
-            <h3 class="text-lg font-bold text-green-800 mb-3">Economic Profit (Uttar Pradesh data)</h3>
+            <h3 class="text-lg font-bold text-green-800 mb-3">💰 Economic Profit (Uttar Pradesh data)</h3>
             <div class="profit-card mb-3">
               <div class="comparison-row"><span>Gross Income (₹/ha):</span> <span id="grossIncomeVal" class="font-bold">0</span></div>
               <div class="comparison-row"><span>Net Profit (₹/ha):</span> <span id="netProfitVal" class="font-bold">0</span></div>
@@ -239,7 +307,7 @@
 <!-- Disease modal -->
 <div id="diseaseModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
   <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto p-6">
-    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">Rice diseases and prevention</h3><button id="closeModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
+    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🌾 Rice diseases and prevention</h3><button id="closeModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
     <table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Disease</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Causes</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Symptoms</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Prevention</th></tr></thead><tbody id="diseaseTbody"></tbody></table>
   </div>
 </div>
@@ -247,8 +315,10 @@
 <!-- Technical modal -->
 <div id="fertilizerModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
   <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6">
-    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">Advanced calculations explained</h3><button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
-    <div id="fertilizerDetails" class="space-y-4 simple-english"></div>
+    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🧪 Fertilizer calculation - आसान भाषा में समझें</h3><button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
+    <div id="fertilizerDetails" class="space-y-4 simple-english">
+      <!-- Content will be populated by JavaScript with simplified explanation -->
+    </div>
   </div>
 </div>
 
@@ -323,6 +393,13 @@
   const profitTab = document.getElementById('profitTab');
   const analysisSection = document.getElementById('analysisSection');
   const profitSection = document.getElementById('profitSection');
+
+  // ========== NEW VOICE ASSISTANT GLOBALS ==========
+  const listenBtn = document.getElementById('listenBtn');
+  const btnText = listenBtn ? listenBtn.querySelector('.btn-text') : null;
+  let lastResult = null;
+  let isSpeaking = false;
+  let currentUtterance = null;
 
   // profit display
   const grossIncomeVal = document.getElementById('grossIncomeVal');
@@ -485,7 +562,7 @@
     return yMin + (yMax - yMin) / (1 + Math.exp(-0.1 * (growth - 60)));
   }
 
-  // ========== FIXED: STAGE PENALTY (direct penalty, no weight multiplication) ==========
+  // ========== STAGE PENALTY (direct penalty, no weight multiplication) ==========
   function applyStagePenalty(growth, stage, N, K, temp, moisture) {
     let penalty = 0;
     if (stage === 'nursery' && moisture > 85) penalty = 0.05;
@@ -500,7 +577,6 @@
     }
     if (stage === 'grain' && temp > 36) penalty = 0.15;
 
-    // ✅ Direct application – weight is NOT used to reduce penalty
     let adjusted = growth * (1 - penalty);
     return Math.min(100, Math.max(0, adjusted));
   }
@@ -517,7 +593,7 @@
     return { grossIncome, netProfit, ROI, breakEvenYield };
   }
 
-  // ========== FIXED: Best possible calculation (uses selected stage, caps yield at 3400) ==========
+  // ========== Best possible calculation ==========
   function calculateBestPossible(selectedStage) {
     const ideal = { ph:6.4, moisture:75, texture:'Clay Loam', N:135, P:50, K:50, temp:29, hum:75, rain:1100 };
     const soilSc = calculateSoilScore(ideal.ph, ideal.moisture, ideal.texture);
@@ -527,17 +603,15 @@
     const disease = computeDiseaseRisk(ideal.hum, ideal.N, ideal.moisture, ideal.ph, ideal.K);
     let growthAdj = growthRaw * (1 - disease.score / 200);
     growthAdj = applyHeatStress(growthAdj, ideal.temp);
-    // ✅ Apply stage penalty with the SAME selected stage
     growthAdj = applyStagePenalty(growthAdj, selectedStage, ideal.N, ideal.K, ideal.temp, ideal.moisture);
     growthAdj = Math.min(100, Math.max(0, growthAdj));
     let yieldVal = logisticYield(growthAdj);
-    // ✅ Cap yield at 3400 kg/ha
     yieldVal = Math.min(3400, yieldVal);
     const profit = calculateProfit(yieldVal);
     return { growth: Math.round(growthAdj), yield: Math.round(yieldVal), profit };
   }
 
-  // ========== performAnalysis (unchanged except stage uses fixed function) ==========
+  // ========== performAnalysis ==========
   function performAnalysis() {
     const ph = parseFloat(soilPh.value) || 0;
     const moist = parseFloat(soilMoisture.value) || 0;
@@ -560,7 +634,6 @@
     const disease = computeDiseaseRisk(hum, N, moist, ph, K);
     let growthAdjusted = growthRaw * (1 - disease.score / 200);
     growthAdjusted = applyHeatStress(growthAdjusted, temp);
-    // stage penalty (fixed version)
     growthAdjusted = applyStagePenalty(growthAdjusted, stage, N, K, temp, moist);
     growthAdjusted = Math.min(100, Math.max(0, growthAdjusted));
     const yieldVal = logisticYield(growthAdjusted);
@@ -587,12 +660,127 @@
     };
   }
 
+  // ========== ENHANCED VOICE REPORT FUNCTION with try-catch ==========
+  function stopSpeaking() {
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if (listenBtn) {
+        listenBtn.classList.remove('speaking');
+        const icon = listenBtn.querySelector('i');
+        if (icon) icon.className = 'fas fa-microphone';
+        if (btnText) btnText.textContent = '🔊 Listen Report';
+      }
+      isSpeaking = false;
+      currentUtterance = null;
+    } catch (error) {
+      console.error("Voice stop error:", error);
+    }
+  }
+
+  function speakReport(data) {
+    try {
+      // Cancel any ongoing speech
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+
+      // Get current values
+      const district = districtEl.value || 'कोई जिला नहीं';
+      const stage = cropStageSelect.options[cropStageSelect.selectedIndex]?.text.split(' ')[0] || 'चयनित';
+      const profit = calculateProfit(data.yield);
+      
+      // Translate disease level
+      let diseaseLevelHindi = 'कम';
+      if (data.diseaseLevel === 'Medium') diseaseLevelHindi = 'मध्यम';
+      else if (data.diseaseLevel === 'High') diseaseLevelHindi = 'उच्च';
+
+      // Build message with all required sections
+      const message = `नमस्ते किसान भाई।
+
+आपने जिला ${district} चुना है।
+
+आपकी फसल की स्टेज ${stage} है।
+
+आपने जो पैरामीटर्स दिए हैं —
+जैसे सॉइल पीएच, मॉइश्चर, नाइट्रोजन, फॉस्फोरस, पोटैशियम,
+टेम्प्रेचर, ह्यूमिडिटी और रेनफॉल —
+उसी के आधार पर यह रिपोर्ट तैयार की गई है।
+
+आपका ग्रोथ स्कोर ${data.growthAdjusted} प्रतिशत है।
+
+आपकी अपेक्षित यील्ड लगभग ${data.yield} किलोग्राम प्रति हेक्टेयर हो सकती है।
+
+डिजीज रिस्क लेवल ${diseaseLevelHindi} है।
+
+सॉइल सूटेबिलिटी ${data.soilScore} प्रतिशत है।
+वेदर सूटेबिलिटी ${data.weatherScore} प्रतिशत है।
+
+आपका एस्टीमेटेड नेट प्रॉफिट लगभग ${Math.abs(Math.round(profit.netProfit))} रुपये ${profit.netProfit < 0 ? 'का नुकसान' : 'का फायदा'} प्रति हेक्टेयर हो सकता है।
+
+अब फर्टिलाइजर सलाह:
+
+${data.fertilizer.ureaKgPerHa > 0 ? 
+  `आपको लगभग ${data.fertilizer.ureaKgPerHa} किलोग्राम यूरिया डालना चाहिए।` : 
+  `यूरिया आपको नहीं डालना है।`}
+
+${data.fertilizer.dapKgPerHa > 0 ? 
+  `${data.fertilizer.dapKgPerHa} किलोग्राम डीएपी डालना चाहिए।` : 
+  `डीएपी आपको नहीं डालना है।`}
+
+${data.fertilizer.mopKgPerHa > 0 ? 
+  `${data.fertilizer.mopKgPerHa} किलोग्राम एमओपी डालना चाहिए।` : 
+  `एमओपी आपको नहीं डालना है।`}
+
+यह पूरी रिपोर्ट सिर्फ आपके दिए गए इनपुट के आधार पर जनरेट हुई है।
+
+धन्यवाद।`;
+
+      // Create and configure utterance
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = 'hi-IN';
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      
+      // Store current utterance
+      currentUtterance = utterance;
+
+      // Handle end of speech
+      utterance.onend = function() {
+        stopSpeaking();
+      };
+
+      utterance.onerror = function() {
+        stopSpeaking();
+      };
+
+      // Update button state
+      if (listenBtn) {
+        listenBtn.classList.add('speaking');
+        const icon = listenBtn.querySelector('i');
+        if (icon) icon.className = 'fas fa-stop';
+        if (btnText) btnText.textContent = '⏹ Stop Listening';
+      }
+      isSpeaking = true;
+
+      // Speak
+      window.speechSynthesis.speak(utterance);
+      
+    } catch (error) {
+      console.error("Voice system error:", error);
+      stopSpeaking();
+      alert('वॉइस सिस्टम में समस्या हुई | Voice system encountered an issue');
+    }
+  }
+
   // ========== Currency formatter ==========
   function formatCurrency(value) {
     return '₹ ' + value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
   }
 
-  // ========== renderResults with profit & comparison (fixed) ==========
+  // ========== renderResults ==========
   function renderResults(d) {
     if (d.error) {
       warnText.textContent = d.messages.join('. ');
@@ -600,7 +788,8 @@
       finalDiv.classList.add('hidden');
       return;
     }
-    // existing analysis render (unchanged)
+    
+    // existing analysis render
     if (growthRawLabel) growthRawLabel.textContent = d.growthRaw + '/100';
     if (growthRawBar) growthRawBar.style.width = d.growthRaw + '%';
     if (growthAdjustedLabel) growthAdjustedLabel.textContent = d.growthAdjusted + '/100';
@@ -650,9 +839,8 @@
     }
 
     finalDiv.classList.remove('hidden');
-    // Removed the .show class addition since we no longer need fade animation
 
-    // === PROFIT SECTION UPDATE (with formatting and negative colour) ===
+    // Profit section update
     const profit = calculateProfit(d.yield);
     if (grossIncomeVal) grossIncomeVal.innerText = formatCurrency(profit.grossIncome);
     if (netProfitVal) {
@@ -665,7 +853,7 @@
     }
     if (breakevenVal) breakevenVal.innerText = profit.breakEvenYield.toFixed(1) + ' kg/ha';
 
-    // Best possible with current stage
+    // Best possible
     const best = calculateBestPossible(cropStageSelect.value);
     if (yourGrowthComp) yourGrowthComp.innerText = d.growthAdjusted + '%';
     if (bestGrowthComp) bestGrowthComp.innerText = best.growth + '%';
@@ -683,10 +871,14 @@
   // ========== EVENT HANDLERS ==========
   function allFilled() { return [districtEl.value, soilTexture.value, soilPh.value, soilMoisture.value, nitrogen.value, phosphorus.value, potassium.value, temperature.value, humidity.value, rainfall.value].every(v => v && v.toString().trim()!==''); }
 
-  // Calculation done flag for profit tab
   let calculationDone = false;
 
   calcBtn.addEventListener('click', () => {
+    // Stop any ongoing speech
+    if (isSpeaking) {
+      stopSpeaking();
+    }
+    
     warnBox.classList.add('hidden');
     if (!allFilled()) {
       warnText.textContent = '⚠ Please fill all fields (district, soil type and all numbers)';
@@ -703,7 +895,13 @@
       const res = performAnalysis();
       loader.classList.add('hidden');
       renderResults(res);
-      // Enable profit tab
+      
+      // Store result and enable voice button
+      lastResult = res;
+      if (listenBtn) {
+        listenBtn.disabled = false;
+      }
+      
       calculationDone = true;
       profitTab.disabled = false;
       profitTab.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -717,14 +915,75 @@
   });
 
   resetBtn.addEventListener('click', () => {
+    // Stop any ongoing speech
+    if (isSpeaking) {
+      stopSpeaking();
+    }
+    
     document.getElementById('cropForm').reset();
     finalDiv.classList.add('hidden'); loader.classList.add('hidden'); placeholder.classList.remove('hidden'); warnBox.classList.add('hidden');
     Object.values(charts).forEach(ch => { if(ch) ch.destroy(); }); charts = { compare: null, npk: null };
+    
+    lastResult = null;
+    if (listenBtn) {
+      listenBtn.disabled = true;
+    }
+    
     calculationDone = false;
     profitTab.disabled = true;
     profitTab.classList.add('opacity-50', 'cursor-not-allowed');
-    // switch to analysis tab if needed
     analysisTab.click();
+  });
+
+  // Voice button event listener with toggle
+  if (listenBtn) {
+    listenBtn.addEventListener('click', () => {
+      try {
+        if (!lastResult) {
+          alert('कृपया पहले कैलकुलेट करें | Please calculate first');
+          return;
+        }
+        
+        if (isSpeaking) {
+          stopSpeaking();
+        } else {
+          speakReport(lastResult);
+        }
+      } catch (error) {
+        console.error("Voice button error:", error);
+        alert('वॉइस सिस्टम में समस्या हुई | Voice system error');
+      }
+    });
+  }
+
+  // Window load handler - cancel any speech and reset button
+  window.addEventListener('load', () => {
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if (listenBtn) {
+        listenBtn.disabled = true;
+        listenBtn.classList.remove('speaking');
+        const icon = listenBtn.querySelector('i');
+        if (icon) icon.className = 'fas fa-microphone';
+        if (btnText) btnText.textContent = '🔊 Listen Report';
+      }
+      isSpeaking = false;
+    } catch (error) {
+      console.error("Window load voice error:", error);
+    }
+  });
+
+  // Before page unload, cancel speech
+  window.addEventListener('beforeunload', () => {
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (error) {
+      console.error("Before unload voice error:", error);
+    }
   });
 
   function populateDiseaseTable() {
@@ -737,19 +996,54 @@
   if (diseaseBtn) { diseaseBtn.addEventListener('click', () => diseaseModal.classList.remove('hidden')); }
   if (closeModal) { closeModal.addEventListener('click', () => diseaseModal.classList.add('hidden')); }
 
+  // Simplified fertilizer explanation
   if (viewDetails) {
     viewDetails.addEventListener('click', () => {
-      if (fertDetails) { fertDetails.innerHTML = `<div class="bg-blue-50 p-4 rounded-lg"><h4 class="font-bold text-lg mb-2">📊 Advanced Features Used:</h4><ul class="list-disc pl-4 space-y-1 text-sm"><li>Safety caps: Urea ≤200, DAP ≤120, MOP ≤100 kg/ha</li><li>Disease reduces growth (up to 50% reduction)</li><li>Heat stress penalty: >35°C = 15% reduction, >38°C = 25%</li><li>Lodging detection: High N + Low K adds risk</li><li>Soil efficiency factor affects fertilizer response</li><li>Rainfall weight reduced to avoid water double counting</li><li>No forced minimum doses - only apply when needed</li></ul></div>`; }
-      fertModal.classList.remove('hidden');
+      try {
+        if (fertDetails) { 
+          fertDetails.innerHTML = `
+            <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+              <h4 class="font-bold text-lg text-green-800 mb-3">🧪 खाद की सलाह कैसे बनती है?</h4>
+              <div class="space-y-4 text-gray-700">
+                <div class="flex gap-3">
+                  <div class="text-2xl">🔍</div>
+                  <div><span class="font-semibold">पहला कदम:</span> सिस्टम चेक करता है कि नाइट्रोजन, फॉस्फोरस और पोटैशियम की मात्रा कम है या ज्यादा।</div>
+                </div>
+                <div class="flex gap-3">
+                  <div class="text-2xl">📉</div>
+                  <div><span class="font-semibold">दूसरा कदम:</span> जितनी कमी होगी, उतनी ही ज्यादा खाद डालने की सलाह दी जाती है।</div>
+                </div>
+                <div class="flex gap-3">
+                  <div class="text-2xl">🌱</div>
+                  <div><span class="font-semibold">तीसरा कदम:</span> मिट्टी की गुणवत्ता जितनी अच्छी होगी, खाद उतनी ही असरदार होगी।</div>
+                </div>
+                <div class="flex gap-3">
+                  <div class="text-2xl">🛡️</div>
+                  <div><span class="font-semibold">चौथा कदम:</span> सेफ्टी लिमिट रखी गई है ताकि ज्यादा खाद डालने से फसल को नुकसान न हो।</div>
+                </div>
+                <div class="flex gap-3">
+                  <div class="text-2xl">✅</div>
+                  <div><span class="font-semibold">पांचवा कदम:</span> अगर कोई न्यूट्रिएंट पहले से ज्यादा है तो उसकी खाद डालने की सलाह नहीं दी जाती।</div>
+                </div>
+              </div>
+              <p class="mt-4 text-sm text-gray-500 border-t pt-3">यह सारा कैलकुलेशन आपके खेत के रियल डेटा के आधार पर होता है।</p>
+            </div>
+          `; 
+        }
+        fertModal.classList.remove('hidden');
+      } catch (error) {
+        console.error("Fertilizer modal error:", error);
+      }
     });
   }
+  
   if (closeFertModal) { closeFertModal.addEventListener('click', () => fertModal.classList.add('hidden')); }
 
   if (downloadBtn) {
     downloadBtn.addEventListener('click', () => { html2canvas(document.body, { scale:1.5 }).then(canvas => { const link = document.createElement('a'); link.download = `farmer_friend_${Date.now()}.png`; link.href = canvas.toDataURL('image/png'); link.click(); }).catch(console.warn); });
   }
 
-  // ===== TAB LOGIC with calculation guard =====
+  // Tab logic
   if (analysisTab && profitTab && analysisSection && profitSection) {
     analysisTab.addEventListener('click', () => {
       analysisTab.classList.add('active-tab');
