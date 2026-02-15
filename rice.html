@@ -1,88 +1,9 @@
-⚠️ IMPORTANT IMPROVEMENTS NEEDED
-
-Now real engineering review 👇
-
-❌ 1️⃣ STAGE WEIGHT LOGIC IS MATHEMATICALLY WEAK
-
-Currently:
-
-reduction = penalty * weight
-growthAdjusted = growth * (1 - reduction)
-
-
-Example:
-Flowering penalty = 30%
-Weight = 0.15
-
-Actual reduction = 0.30 × 0.15 = 0.045 = 4.5%
-
-That is too small.
-
-🔥 Real impact should be stronger.
-
-✅ Better Formula
-
-Instead of multiplying penalty by weight:
-
-growthAdjusted = growthAdjusted * (1 - penalty)
-
-
-Stage weight should influence sensitivity, not shrink penalty.
-
-❌ 2️⃣ BEST POSSIBLE DOES NOT APPLY STAGE
-
-You skipped stage penalty for best case.
-
-That creates unrealistic comparison.
-
-Better:
-
-Use selected stage for best scenario.
-
-growthAdj = applyStagePenalty(growthAdj, selectedStage, ...)
-
-❌ 3️⃣ BEST YIELD CAN EXCEED 3400
-
-You didn’t cap best yield explicitly.
-
-Add:
-
-yieldVal = Math.min(3400, yieldVal);
-
-❌ 4️⃣ ROI CAN BE NEGATIVE (UI ISSUE)
-
-If yield low → ROI negative → looks broken.
-
-Better show:
-
-if (ROI < 0) show in red
-
-❌ 5️⃣ PROFIT TAB ACCESS BEFORE CALCULATE
-
-User can click profit tab before calculation → shows zeros.
-
-Better:
-
-Disable profit tab until calculation done.
-
-⚠️ Minor Suggestions
-Add Currency Formatter
-
-Instead of:
-
-₹ 45000.00
-
-
-Use:
-
-₹ 45,000
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Farmer Friend · Advanced Rice Analysis + UP Stage & Profit</title>
+  <title>Farmer Friend · Advanced Rice Analysis + UP Stage & Profit (FIXED)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -103,15 +24,17 @@ Use:
     .simple-english { font-size: 0.95rem; line-height: 1.5; }
     .sensitivity-bar { height: 6px; border-radius: 3px; }
 
-    /* ===== NEW TAB STYLES (Feature 2) ===== */
+    /* ===== NEW TAB STYLES ===== */
     .tabs { display: flex; gap: 10px; margin-bottom: 16px; }
     .tabs button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; background-color: #e9e9e9; transition: 0.2s; }
     .active-tab { background-color: #16a34a !important; color: white; font-weight: 500; }
     .hidden { display: none !important; }
-
-    /* profit cards */
+    /* Disabled tab style */
+    .tabs button:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+    /* Profit card */
     .profit-card { background: #f9fafb; border-radius: 12px; padding: 16px; border-left: 4px solid #16a34a; }
     .comparison-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ccc; }
+    .text-red-600 { color: #dc2626; }
   </style>
 </head>
 <body class="bg-gray-50 text-slate-800">
@@ -123,11 +46,11 @@ Use:
   </header>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- INPUT PANEL (with crop stage dropdown added) -->
+    <!-- INPUT PANEL -->
     <div class="bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-xl font-semibold text-green-700 mb-4">📋 Your Field Details</h2>
       
-      <!-- ===== FEATURE 1: CROP STAGE SELECTOR (added inside input panel) ===== -->
+      <!-- CROP STAGE SELECTOR -->
       <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <label class="text-sm font-medium text-gray-700 block mb-1">🌾 Crop stage (Uttar Pradesh)</label>
         <select id="cropStage" class="w-full px-3 py-2 border rounded-md">
@@ -172,7 +95,7 @@ Use:
       </form>
     </div>
 
-    <!-- RESULTS SECTION (with new tab system) -->
+    <!-- RESULTS SECTION -->
     <div class="bg-white p-6 rounded-lg shadow-md">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold text-green-700">📊 Advanced Field Report</h2>
@@ -180,10 +103,10 @@ Use:
       </div>
       <button id="downloadImageBtn" class="mb-3 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md"><i class="fas fa-download mr-2"></i>Download report</button>
 
-      <!-- ===== FEATURE 2: TABS ===== -->
+      <!-- TABS -->
       <div class="tabs">
         <button id="analysisTab" class="active-tab">Analysis Report</button>
-        <button id="profitTab">Economic Profit</button>
+        <button id="profitTab" disabled class="opacity-50 cursor-not-allowed">Economic Profit</button>
       </div>
 
       <div id="resultsContainer" class="space-y-4">
@@ -191,9 +114,8 @@ Use:
         <div id="warningBox" class="hidden bg-red-100 border border-red-200 text-red-800 p-3 rounded-lg flex gap-2 items-center"><i class="fas fa-triangle-exclamation"></i><span id="warningText" class="simple-english">Please fill all fields</span></div>
         <div id="loaderArea" class="hidden p-4 bg-white rounded-lg border"><div class="flex items-center gap-3"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div><div><div class="font-medium">Analyzing your field<span class="dots"></span></div><div class="text-xs text-gray-500">Just a moment...</div></div></div></div>
 
-        <!-- === ANALYSIS SECTION (existing results, unchanged) === -->
+        <!-- ANALYSIS SECTION -->
         <div id="analysisSection" class="fade-in space-y-4">
-          <!-- final analysis content (identical to original) -->
           <div id="finalResults" class="space-y-4">
             <!-- Growth Scores -->
             <div class="bg-green-50 p-4 rounded-lg">
@@ -245,18 +167,9 @@ Use:
             <div class="bg-white border border-gray-200 p-4 rounded-lg">
               <h3 class="font-medium text-gray-800 mb-3">📊 What affects your crop most?</h3>
               <div class="space-y-2">
-                <div>
-                  <div class="flex justify-between text-sm"><span>Soil</span><span id="soilPercentLabel">0%</span></div>
-                  <div class="w-full bg-gray-200 rounded-full h-2"><div id="soilPercentBar" class="sensitivity-bar bg-yellow-500" style="width:0%"></div></div>
-                </div>
-                <div>
-                  <div class="flex justify-between text-sm"><span>Nutrients</span><span id="nutrientPercentLabel">0%</span></div>
-                  <div class="w-full bg-gray-200 rounded-full h-2"><div id="nutrientPercentBar" class="sensitivity-bar bg-green-500" style="width:0%"></div></div>
-                </div>
-                <div>
-                  <div class="flex justify-between text-sm"><span>Weather</span><span id="weatherPercentLabel">0%</span></div>
-                  <div class="w-full bg-gray-200 rounded-full h-2"><div id="weatherPercentBar" class="sensitivity-bar bg-blue-500" style="width:0%"></div></div>
-                </div>
+                <div><div class="flex justify-between text-sm"><span>Soil</span><span id="soilPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="soilPercentBar" class="sensitivity-bar bg-yellow-500" style="width:0%"></div></div></div>
+                <div><div class="flex justify-between text-sm"><span>Nutrients</span><span id="nutrientPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="nutrientPercentBar" class="sensitivity-bar bg-green-500" style="width:0%"></div></div></div>
+                <div><div class="flex justify-between text-sm"><span>Weather</span><span id="weatherPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="weatherPercentBar" class="sensitivity-bar bg-blue-500" style="width:0%"></div></div></div>
               </div>
             </div>
             
@@ -266,58 +179,22 @@ Use:
                 <h3 class="font-bold text-green-800">🧪 Fertilizer advice (with efficiency factor)</h3>
                 <button id="viewDetailsBtn" class="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700">How we calculate</button>
               </div>
-              
-              <!-- Status badges -->
               <div class="grid grid-cols-3 gap-2 mb-4">
-                <div class="text-center">
-                  <span class="text-sm font-medium">Nitrogen (N)</span>
-                  <div><span id="nStatusBadge" class="status-badge">—</span></div>
-                </div>
-                <div class="text-center">
-                  <span class="text-sm font-medium">Phosphorus (P)</span>
-                  <div><span id="pStatusBadge" class="status-badge">—</span></div>
-                </div>
-                <div class="text-center">
-                  <span class="text-sm font-medium">Potassium (K)</span>
-                  <div><span id="kStatusBadge" class="status-badge">—</span></div>
-                </div>
+                <div class="text-center"><span class="text-sm font-medium">Nitrogen (N)</span><div><span id="nStatusBadge" class="status-badge">—</span></div></div>
+                <div class="text-center"><span class="text-sm font-medium">Phosphorus (P)</span><div><span id="pStatusBadge" class="status-badge">—</span></div></div>
+                <div class="text-center"><span class="text-sm font-medium">Potassium (K)</span><div><span id="kStatusBadge" class="status-badge">—</span></div></div>
               </div>
-              
-              <!-- Fertilizer doses -->
               <div class="grid grid-cols-3 gap-3 mb-4">
-                <div class="bg-blue-50 p-2 rounded text-center">
-                  <div class="text-xs text-gray-600">Urea (kg/ha)</div>
-                  <div class="text-xl font-bold text-blue-700" id="ureaDose">0</div>
-                </div>
-                <div class="bg-purple-50 p-2 rounded text-center">
-                  <div class="text-xs text-gray-600">DAP (kg/ha)</div>
-                  <div class="text-xl font-bold text-purple-700" id="dapDose">0</div>
-                </div>
-                <div class="bg-amber-50 p-2 rounded text-center">
-                  <div class="text-xs text-gray-600">MOP (kg/ha)</div>
-                  <div class="text-xl font-bold text-amber-700" id="mopDose">0</div>
-                </div>
+                <div class="bg-blue-50 p-2 rounded text-center"><div class="text-xs text-gray-600">Urea (kg/ha)</div><div class="text-xl font-bold text-blue-700" id="ureaDose">0</div></div>
+                <div class="bg-purple-50 p-2 rounded text-center"><div class="text-xs text-gray-600">DAP (kg/ha)</div><div class="text-xl font-bold text-purple-700" id="dapDose">0</div></div>
+                <div class="bg-amber-50 p-2 rounded text-center"><div class="text-xs text-gray-600">MOP (kg/ha)</div><div class="text-xl font-bold text-amber-700" id="mopDose">0</div></div>
               </div>
-              
-              <!-- Efficiency factor -->
-              <div class="bg-gray-50 p-2 rounded mb-2 text-sm">
-                <span class="font-semibold">Soil efficiency factor:</span> <span id="efficiencyFactor">0%</span>
-              </div>
-              
-              <!-- How to apply -->
+              <div class="bg-gray-50 p-2 rounded mb-2 text-sm"><span class="font-semibold">Soil efficiency factor:</span> <span id="efficiencyFactor">0%</span></div>
               <div class="space-y-2 text-sm">
-                <div class="bg-green-50 p-2 rounded">
-                  <span class="font-semibold">Nitrogen:</span> <span id="nitrogenMethodText" class="simple-english">—</span>
-                </div>
-                <div class="bg-green-50 p-2 rounded">
-                  <span class="font-semibold">Phosphorus:</span> <span id="phosphorusMethodText" class="simple-english">—</span>
-                </div>
-                <div class="bg-green-50 p-2 rounded">
-                  <span class="font-semibold">Potassium:</span> <span id="potassiumMethodText" class="simple-english">—</span>
-                </div>
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Nitrogen:</span> <span id="nitrogenMethodText" class="simple-english">—</span></div>
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Phosphorus:</span> <span id="phosphorusMethodText" class="simple-english">—</span></div>
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Potassium:</span> <span id="potassiumMethodText" class="simple-english">—</span></div>
               </div>
-              
-              <!-- Warnings -->
               <div id="fertilizerWarnings" class="mt-3 space-y-1"></div>
             </div>
 
@@ -327,7 +204,7 @@ Use:
           </div>
         </div>
 
-        <!-- === PROFIT SECTION (hidden by default, FEATURE 2) === -->
+        <!-- PROFIT SECTION (hidden by default) -->
         <div id="profitSection" class="hidden space-y-4">
           <div class="bg-gradient-to-r from-emerald-50 to-green-50 p-5 rounded-xl border border-green-200">
             <h3 class="text-lg font-bold text-green-800 mb-3">💰 Economic Profit (Uttar Pradesh data)</h3>
@@ -340,34 +217,16 @@ Use:
             <p class="text-xs text-gray-500 mt-2">MSP 2024–25: ₹2183/q, Cost of cultivation (UP): ₹45000/ha</p>
           </div>
 
-          <!-- ===== FEATURE 3: BEST POSSIBLE COMPARISON ===== -->
+          <!-- BEST POSSIBLE COMPARISON -->
           <div class="bg-amber-50 p-5 rounded-xl border border-amber-300">
             <h3 class="text-lg font-bold text-amber-800 mb-3">🌿 Your Field vs Best Possible (UP ideal)</h3>
             <div class="grid grid-cols-2 gap-4 text-sm">
-              <div class="bg-white p-3 rounded">
-                <span class="font-semibold">Your Adjusted Growth</span>
-                <p id="yourGrowthComp" class="text-xl font-bold text-green-700">0%</p>
-              </div>
-              <div class="bg-white p-3 rounded">
-                <span class="font-semibold">Best Growth</span>
-                <p id="bestGrowthComp" class="text-xl font-bold text-amber-700">0%</p>
-              </div>
-              <div class="bg-white p-3 rounded">
-                <span class="font-semibold">Your Yield</span>
-                <p id="yourYieldComp" class="text-xl font-bold text-blue-700">0 kg/ha</p>
-              </div>
-              <div class="bg-white p-3 rounded">
-                <span class="font-semibold">Best Yield</span>
-                <p id="bestYieldComp" class="text-xl font-bold text-blue-700">0 kg/ha</p>
-              </div>
-              <div class="bg-white p-3 rounded col-span-2">
-                <span class="font-semibold">Your Net Profit</span>
-                <p id="yourProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p>
-              </div>
-              <div class="bg-white p-3 rounded col-span-2">
-                <span class="font-semibold">Best Net Profit</span>
-                <p id="bestProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p>
-              </div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Your Adjusted Growth</span><p id="yourGrowthComp" class="text-xl font-bold text-green-700">0%</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Best Growth</span><p id="bestGrowthComp" class="text-xl font-bold text-amber-700">0%</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Your Yield</span><p id="yourYieldComp" class="text-xl font-bold text-blue-700">0 kg/ha</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Best Yield</span><p id="bestYieldComp" class="text-xl font-bold text-blue-700">0 kg/ha</p></div>
+              <div class="bg-white p-3 rounded col-span-2"><span class="font-semibold">Your Net Profit</span><p id="yourProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p></div>
+              <div class="bg-white p-3 rounded col-span-2"><span class="font-semibold">Best Net Profit</span><p id="bestProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p></div>
             </div>
             <p class="text-xs text-gray-500 mt-2">Ideal: pH 6.4, Moisture 75%, N 135, P 50, K 50, Temp 29°C, Humidity 75%, Rainfall 1100mm</p>
           </div>
@@ -377,7 +236,7 @@ Use:
   </div>
 </div>
 
-<!-- Disease modal (unchanged) -->
+<!-- Disease modal -->
 <div id="diseaseModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
   <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto p-6">
     <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🌾 Rice diseases and prevention</h3><button id="closeModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
@@ -385,24 +244,19 @@ Use:
   </div>
 </div>
 
-<!-- Technical modal (unchanged) -->
+<!-- Technical modal -->
 <div id="fertilizerModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
   <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-bold text-green-800">Advanced calculations explained</h3>
-      <button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
-    </div>
+    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">Advanced calculations explained</h3><button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
     <div id="fertilizerDetails" class="space-y-4 simple-english"></div>
   </div>
 </div>
 
 <script>
 (function() {
-  // ========================================================
-  // ORIGINAL ENGINE (FULLY PRESERVED) + NEW FEATURES ADDED MODULARLY
-  // ========================================================
+  // ==================== EXISTING ENGINE (fully preserved) ====================
   
-  // Get all DOM elements (existing)
+  // DOM elements
   const districtEl = document.getElementById('district');
   const soilPh = document.getElementById('soilPh');
   const soilMoisture = document.getElementById('soilMoisture');
@@ -421,7 +275,6 @@ Use:
   const warnBox = document.getElementById('warningBox');
   const warnText = document.getElementById('warningText');
   
-  // Result labels (existing)
   const growthRawLabel = document.getElementById('growthRawLabel');
   const growthRawBar = document.getElementById('growthRawBar');
   const growthAdjustedLabel = document.getElementById('growthAdjustedLabel');
@@ -464,19 +317,18 @@ Use:
   
   let charts = { compare: null, npk: null };
 
-  // ===== NEW ELEMENTS (Feature 1,2,3) =====
+  // NEW ELEMENTS
   const cropStageSelect = document.getElementById('cropStage');
   const analysisTab = document.getElementById('analysisTab');
   const profitTab = document.getElementById('profitTab');
   const analysisSection = document.getElementById('analysisSection');
   const profitSection = document.getElementById('profitSection');
 
-  // profit display elements
+  // profit display
   const grossIncomeVal = document.getElementById('grossIncomeVal');
   const netProfitVal = document.getElementById('netProfitVal');
   const roiVal = document.getElementById('roiVal');
   const breakevenVal = document.getElementById('breakevenVal');
-  // comparison elements
   const yourGrowthComp = document.getElementById('yourGrowthComp');
   const bestGrowthComp = document.getElementById('bestGrowthComp');
   const yourYieldComp = document.getElementById('yourYieldComp');
@@ -484,7 +336,7 @@ Use:
   const yourProfitComp = document.getElementById('yourProfitComp');
   const bestProfitComp = document.getElementById('bestProfitComp');
 
-  // District data (unchanged)
+  // District data
   const districtData = [
     { district: "Lucknow", pH: 6.9, moisture: 72, nitrogen: 198, phosphorus: 20, potassium: 174, temperature: 29.5, humidity: 78, rainfall: 920 },
     { district: "Agra", pH: 6.3, moisture: 65, nitrogen: 190, phosphorus: 18, potassium: 180, temperature: 30.8, humidity: 70, rainfall: 890 },
@@ -633,23 +485,27 @@ Use:
     return yMin + (yMax - yMin) / (1 + Math.exp(-0.1 * (growth - 60)));
   }
 
-  // ========== NEW: STAGE PENALTY (Feature 1) ==========
+  // ========== FIXED: STAGE PENALTY (direct penalty, no weight multiplication) ==========
   function applyStagePenalty(growth, stage, N, K, temp, moisture) {
-    const stageWeights = { nursery:0.15, tillering:0.35, panicle:0.25, flowering:0.15, grain:0.10 };
     let penalty = 0;
     if (stage === 'nursery' && moisture > 85) penalty = 0.05;
-    if (stage === 'tillering') { if (N < 110) penalty = 0.15; else if (N > 170) penalty = 0.10; }
+    if (stage === 'tillering') { 
+      if (N < 110) penalty = 0.15; 
+      else if (N > 170) penalty = 0.10; 
+    }
     if (stage === 'panicle' && K < 35) penalty = 0.12;
-    if (stage === 'flowering') { if (temp > 35) penalty = 0.20; if (temp > 38) penalty = 0.30; }
+    if (stage === 'flowering') { 
+      if (temp > 35) penalty = 0.20; 
+      if (temp > 38) penalty = 0.30; 
+    }
     if (stage === 'grain' && temp > 36) penalty = 0.15;
 
-    const weight = stageWeights[stage] || 0;
-    const reduction = penalty * weight;
-    let adjusted = growth * (1 - reduction);
+    // ✅ Direct application – weight is NOT used to reduce penalty
+    let adjusted = growth * (1 - penalty);
     return Math.min(100, Math.max(0, adjusted));
   }
 
-  // ========== NEW: Profit calculation (Feature 2) ==========
+  // ========== Profit calculation ==========
   function calculateProfit(yieldKg) {
     const MSP = 2183;       // ₹ per quintal
     const COST = 45000;     // ₹ per hectare
@@ -657,13 +513,12 @@ Use:
     const grossIncome = quintal * MSP;
     const netProfit = grossIncome - COST;
     const ROI = (netProfit / COST) * 100;
-    const breakEvenYield = (COST / MSP) * 100;  // kg/ha
+    const breakEvenYield = (COST / MSP) * 100;
     return { grossIncome, netProfit, ROI, breakEvenYield };
   }
 
-  // ========== NEW: Best possible calculation (Feature 3) ==========
-  function calculateBestPossible() {
-    // Ideal UP conditions
+  // ========== FIXED: Best possible calculation (uses selected stage, caps yield at 3400) ==========
+  function calculateBestPossible(selectedStage) {
     const ideal = { ph:6.4, moisture:75, texture:'Clay Loam', N:135, P:50, K:50, temp:29, hum:75, rain:1100 };
     const soilSc = calculateSoilScore(ideal.ph, ideal.moisture, ideal.texture);
     const nutrSc = calculateNutrientScore(ideal.N, ideal.P, ideal.K);
@@ -672,16 +527,17 @@ Use:
     const disease = computeDiseaseRisk(ideal.hum, ideal.N, ideal.moisture, ideal.ph, ideal.K);
     let growthAdj = growthRaw * (1 - disease.score / 200);
     growthAdj = applyHeatStress(growthAdj, ideal.temp);
-    // apply best stage? We'll assume 'panicle' as moderate representative, but to be neutral we skip stage (or use none)
-    // For best, we don't apply stage penalty (ideal management), but if we want safe, we can set stage = 'tillering' or none. Use none: 0 penalty.
-    // We'll not apply stage penalty for best.
+    // ✅ Apply stage penalty with the SAME selected stage
+    growthAdj = applyStagePenalty(growthAdj, selectedStage, ideal.N, ideal.K, ideal.temp, ideal.moisture);
     growthAdj = Math.min(100, Math.max(0, growthAdj));
-    const yieldVal = logisticYield(growthAdj);
+    let yieldVal = logisticYield(growthAdj);
+    // ✅ Cap yield at 3400 kg/ha
+    yieldVal = Math.min(3400, yieldVal);
     const profit = calculateProfit(yieldVal);
     return { growth: Math.round(growthAdj), yield: Math.round(yieldVal), profit };
   }
 
-  // ========== MODIFIED performAnalysis to include stage penalty ==========
+  // ========== performAnalysis (unchanged except stage uses fixed function) ==========
   function performAnalysis() {
     const ph = parseFloat(soilPh.value) || 0;
     const moist = parseFloat(soilMoisture.value) || 0;
@@ -692,7 +548,7 @@ Use:
     const temp = parseFloat(temperature.value) || 0;
     const hum = parseFloat(humidity.value) || 0;
     const rain = parseFloat(rainfall.value) || 0;
-    const stage = cropStageSelect.value;   // new
+    const stage = cropStageSelect.value;
 
     const validationErrors = validateInputs(ph, moist, N, P, K, temp, hum, rain);
     if (validationErrors.length > 0) return { error: true, messages: validationErrors };
@@ -704,10 +560,8 @@ Use:
     const disease = computeDiseaseRisk(hum, N, moist, ph, K);
     let growthAdjusted = growthRaw * (1 - disease.score / 200);
     growthAdjusted = applyHeatStress(growthAdjusted, temp);
-    
-    // === FEATURE 1: stage penalty applied AFTER heat/disease ===
+    // stage penalty (fixed version)
     growthAdjusted = applyStagePenalty(growthAdjusted, stage, N, K, temp, moist);
-    
     growthAdjusted = Math.min(100, Math.max(0, growthAdjusted));
     const yieldVal = logisticYield(growthAdjusted);
     const yieldRounded = Math.round(yieldVal);
@@ -733,7 +587,12 @@ Use:
     };
   }
 
-  // ========== RENDER WITH PROFIT & COMPARISON ==========
+  // ========== Currency formatter ==========
+  function formatCurrency(value) {
+    return '₹ ' + value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+  }
+
+  // ========== renderResults with profit & comparison (fixed) ==========
   function renderResults(d) {
     if (d.error) {
       warnText.textContent = d.messages.join('. ');
@@ -741,7 +600,7 @@ Use:
       finalDiv.classList.add('hidden');
       return;
     }
-    // existing analysis render
+    // existing analysis render (unchanged)
     if (growthRawLabel) growthRawLabel.textContent = d.growthRaw + '/100';
     if (growthRawBar) growthRawBar.style.width = d.growthRaw + '%';
     if (growthAdjustedLabel) growthAdjustedLabel.textContent = d.growthAdjusted + '/100';
@@ -793,24 +652,39 @@ Use:
     finalDiv.classList.remove('hidden');
     setTimeout(() => finalDiv.classList.add('show'), 20);
 
-    // === NEW: update profit and best comparison ===
+    // === PROFIT SECTION UPDATE (with formatting and negative colour) ===
     const profit = calculateProfit(d.yield);
-    if (grossIncomeVal) grossIncomeVal.innerText = '₹ ' + profit.grossIncome.toFixed(2);
-    if (netProfitVal) netProfitVal.innerText = '₹ ' + profit.netProfit.toFixed(2);
-    if (roiVal) roiVal.innerText = profit.ROI.toFixed(1) + '%';
-    if (breakevenVal) breakevenVal.innerText = profit.breakEvenYield.toFixed(1);
+    if (grossIncomeVal) grossIncomeVal.innerText = formatCurrency(profit.grossIncome);
+    if (netProfitVal) {
+      netProfitVal.innerText = formatCurrency(profit.netProfit);
+      netProfitVal.className = profit.netProfit < 0 ? 'font-bold text-red-600' : 'font-bold text-green-700';
+    }
+    if (roiVal) {
+      roiVal.innerText = profit.ROI.toFixed(1) + '%';
+      roiVal.className = profit.ROI < 0 ? 'font-bold text-red-600' : 'font-bold text-green-700';
+    }
+    if (breakevenVal) breakevenVal.innerText = profit.breakEvenYield.toFixed(1) + ' kg/ha';
 
-    const best = calculateBestPossible();
+    // Best possible with current stage
+    const best = calculateBestPossible(cropStageSelect.value);
     if (yourGrowthComp) yourGrowthComp.innerText = d.growthAdjusted + '%';
     if (bestGrowthComp) bestGrowthComp.innerText = best.growth + '%';
     if (yourYieldComp) yourYieldComp.innerText = d.yield + ' kg/ha';
     if (bestYieldComp) bestYieldComp.innerText = best.yield + ' kg/ha';
-    if (yourProfitComp) yourProfitComp.innerText = '₹ ' + profit.netProfit.toFixed(2) + '/ha';
-    if (bestProfitComp) bestProfitComp.innerText = '₹ ' + best.profit.netProfit.toFixed(2) + '/ha';
+    if (yourProfitComp) {
+      yourProfitComp.innerText = formatCurrency(profit.netProfit) + '/ha';
+      yourProfitComp.className = profit.netProfit < 0 ? 'text-xl font-bold text-red-600' : 'text-xl font-bold text-emerald-700';
+    }
+    if (bestProfitComp) {
+      bestProfitComp.innerText = formatCurrency(best.profit.netProfit) + '/ha';
+    }
   }
 
-  // ========== EVENT HANDLERS (existing, plus tabs) ==========
+  // ========== EVENT HANDLERS ==========
   function allFilled() { return [districtEl.value, soilTexture.value, soilPh.value, soilMoisture.value, nitrogen.value, phosphorus.value, potassium.value, temperature.value, humidity.value, rainfall.value].every(v => v && v.toString().trim()!==''); }
+
+  // Calculation done flag for profit tab
+  let calculationDone = false;
 
   calcBtn.addEventListener('click', () => {
     warnBox.classList.add('hidden');
@@ -829,6 +703,10 @@ Use:
       const res = performAnalysis();
       loader.classList.add('hidden');
       renderResults(res);
+      // Enable profit tab
+      calculationDone = true;
+      profitTab.disabled = false;
+      profitTab.classList.remove('opacity-50', 'cursor-not-allowed');
     }, 800);
   });
 
@@ -842,7 +720,11 @@ Use:
     document.getElementById('cropForm').reset();
     finalDiv.classList.add('hidden'); finalDiv.classList.remove('show'); loader.classList.add('hidden'); placeholder.classList.remove('hidden'); warnBox.classList.add('hidden');
     Object.values(charts).forEach(ch => { if(ch) ch.destroy(); }); charts = { compare: null, npk: null };
-    // also reset profit section empty
+    calculationDone = false;
+    profitTab.disabled = true;
+    profitTab.classList.add('opacity-50', 'cursor-not-allowed');
+    // switch to analysis tab if needed
+    analysisTab.click();
   });
 
   function populateDiseaseTable() {
@@ -867,7 +749,7 @@ Use:
     downloadBtn.addEventListener('click', () => { html2canvas(document.body, { scale:1.5 }).then(canvas => { const link = document.createElement('a'); link.download = `farmer_friend_${Date.now()}.png`; link.href = canvas.toDataURL('image/png'); link.click(); }).catch(console.warn); });
   }
 
-  // ===== TAB LOGIC (Feature 2) =====
+  // ===== TAB LOGIC with calculation guard =====
   if (analysisTab && profitTab && analysisSection && profitSection) {
     analysisTab.addEventListener('click', () => {
       analysisTab.classList.add('active-tab');
@@ -876,6 +758,10 @@ Use:
       profitSection.classList.add('hidden');
     });
     profitTab.addEventListener('click', () => {
+      if (!calculationDone) {
+        alert('Please calculate field analysis first');
+        return;
+      }
       profitTab.classList.add('active-tab');
       analysisTab.classList.remove('active-tab');
       profitSection.classList.remove('hidden');
@@ -886,4 +772,3 @@ Use:
 </script>
 </body>
 </html>
-
