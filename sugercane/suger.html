@@ -1,527 +1,992 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>उत्तर प्रदेश सुगरकेन AI · क्रॉपगार्ड एडवांस्ड</title>
-    <!-- Tailwind + Font Awesome + Chart.js -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        /* loader, voice pulse, tabs */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 1rem auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .voice-btn.speaking i { animation: pulse 1.2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
-        .tab-active { background-color: #10b981; color: white; border-color: #10b981; }
-        .progress-bar { height: 10px; border-radius: 5px; background: #e5e7eb; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.3s; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmer Friend · Advanced Sugarcane AI (Uttar Pradesh)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    .progress-bar { height: 8px; border-radius: 4px; transition: width .5s ease-in-out; }
+    .disease-row:hover { background-color: #f0fdf4; }
+    .dots::after { content: ""; display: inline-block; width: 0.8em; text-align: left; animation: dots 1s steps(5,end) infinite; }
+    @keyframes dots { 0% { content: ""; } 20% { content: "."; } 40% { content: ".."; } 60% { content: "..."; } 80% { content: "...."; } 100% { content: ""; } }
+    .fade-in { opacity: 0; transform: translateY(6px); transition: opacity .45s ease, transform .45s ease; }
+    .fade-in.show { opacity: 1; transform: translateY(0); }
+    canvas { width: 100% !important; height: auto !important; }
+    .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .status-deficient { background-color: #fee2e2; color: #991b1b; }
+    .status-optimal { background-color: #dcfce7; color: #166534; }
+    .status-excess { background-color: #fef9c3; color: #854d0e; }
+    .simple-english { font-size: 0.95rem; line-height: 1.5; }
+    .sensitivity-bar { height: 6px; border-radius: 3px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 16px; }
+    .tabs button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; background-color: #e9e9e9; transition: 0.2s; }
+    .active-tab { background-color: #16a34a !important; color: white; font-weight: 500; }
+    .hidden { display: none !important; }
+    .tabs button:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+    .profit-card { background: #f9fafb; border-radius: 12px; padding: 16px; border-left: 4px solid #16a34a; }
+    .comparison-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ccc; }
+    .voice-btn { 
+      background-color: #f59e0b; 
+      color: white; 
+      padding: 8px 20px; 
+      border-radius: 9999px; 
+      font-size: 0.95rem; 
+      font-weight: 500; 
+      transition: all 0.3s ease; 
+      border: none; 
+      cursor: pointer; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .voice-btn:hover:not(:disabled) { 
+      background-color: #d97706; 
+      transform: scale(1.02);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .voice-btn:active:not(:disabled) { transform: scale(0.98); }
+    .voice-btn:disabled { opacity: 0.5; cursor: not-allowed; background-color: #9ca3af; }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); }
+      100% { transform: scale(1); }
+    }
+    .voice-btn.speaking { background-color: #dc2626; animation: pulse 1.5s infinite; }
+    .voice-btn.speaking i { animation: spin 2s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
 </head>
-<body class="bg-gray-50 font-sans antialiased" onload="if(window.speechSynthesis) window.speechSynthesis.cancel()">
+<body class="bg-gray-50 text-slate-800">
 
-<div class="max-w-7xl mx-auto px-4 py-6">
-    <h1 class="text-3xl md:text-4xl font-bold text-green-800 border-b-2 border-green-200 pb-2 mb-6 flex items-center gap-2">
-        <i class="fas fa-seedling text-green-600"></i> उत्तर प्रदेश सुगरकेन AI · CropGuard एडवांस्ड
-    </h1>
+<div class="container mx-auto px-4 py-8">
+  <header class="mb-6 text-center">
+    <h1 class="text-3xl font-bold text-green-800 mb-1">🌱 Farmer Friend · Advanced Sugarcane AI (Uttar Pradesh)</h1>
+    <p class="text-gray-600 simple-english">UP specific rainfall penalties, stage-based logic, FRP ₹315/quintal</p>
+  </header>
 
-    <!-- MAIN GRID -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- INPUT PANEL (left) -->
-        <div class="lg:col-span-1 bg-white rounded-2xl shadow-lg p-5 space-y-4">
-            <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2"><i class="fas fa-sliders-h text-green-600"></i> इनपुट पैरामीटर</h2>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700">जिला (UP)</label>
-                <select id="district" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                    <option value="Lucknow">लखनऊ (Lucknow)</option>
-                    <option value="Agra">आगरा (Agra)</option>
-                    <option value="Gorakhpur">गोरखपुर (Gorakhpur)</option>
-                    <option value="Varanasi">वाराणसी (Varanasi)</option>
-                    <option value="Jhansi">झाँसी (Jhansi)</option>
-                </select>
-            </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- INPUT PANEL -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold text-green-700 mb-4"> Your Sugarcane Field</h2>
+      
+      <!-- CROP STAGE SELECTOR (UP specific) -->
+      <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <label class="text-sm font-medium text-gray-700 block mb-1">🌾 Crop stage (Uttar Pradesh)</label>
+        <select id="cropStage" class="w-full px-3 py-2 border rounded-md">
+          <option value="Germination">Germination (0-30 days)</option>
+          <option value="Tillering">Tillering (30-60 days)</option>
+          <option value="Grand Growth" selected>Grand Growth (60-150 days)</option>
+          <option value="Maturity">Maturity (150-210 days)</option>
+          <option value="Ratoon">Ratoon Crop</option>
+        </select>
+        <p class="text-xs text-gray-500 mt-1">Stage-specific penalties based on UP agronomy</p>
+      </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div><label class="block text-sm">मिट्टी pH</label><input type="number" id="ph" value="6.8" step="0.1" class="w-full rounded-lg border-gray-300"></div>
-                <div><label class="block text-sm">नमी (%)</label><input type="number" id="moisture" value="70" class="w-full rounded-lg border-gray-300"></div>
-                <div><label class="block text-sm">तापमान (°C)</label><input type="number" id="temp" value="30" class="w-full rounded-lg border-gray-300"></div>
-                <div><label class="block text-sm">ह्यूमिडिटी (%)</label><input type="number" id="humidity" value="75" class="w-full rounded-lg border-gray-300"></div>
-                <div class="col-span-2"><label class="block text-sm">वर्षा (mm)</label><input type="number" id="rainfall" value="900" class="w-full rounded-lg border-gray-300"></div>
-            </div>
+      <!-- IRRIGATION CHECKBOX -->
+      <div class="mb-4 flex items-center gap-2">
+        <input type="checkbox" id="irrigation" class="w-4 h-4 text-green-600">
+        <label for="irrigation" class="text-sm font-medium text-gray-700">🚜 Irrigation available (reduces drought penalty)</label>
+      </div>
 
-            <div class="grid grid-cols-3 gap-2">
-                <div><label class="block text-sm">नाइट्रोजन (N)</label><input type="number" id="n" value="280" class="w-full rounded-lg border-gray-300"></div>
-                <div><label class="block text-sm">फॉस्फोरस (P)</label><input type="number" id="p" value="120" class="w-full rounded-lg border-gray-300"></div>
-                <div><label class="block text-sm">पोटैशियम (K)</label><input type="number" id="k" value="200" class="w-full rounded-lg border-gray-300"></div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium">फसल अवस्था (Crop stage)</label>
-                <select id="cropStage" class="mt-1 block w-full rounded-lg border-gray-300">
-                    <option value="Germination">अंकुरण (Germination)</option>
-                    <option value="Tillering">कल्ले (Tillering)</option>
-                    <option value="Grand Growth" selected>वृद्धि (Grand Growth)</option>
-                    <option value="Maturity">पकाव (Maturity)</option>
-                    <option value="Ratoon">रतून (Ratoon)</option>
-                </select>
-            </div>
-
-            <div class="flex items-center gap-4 pt-2">
-                <label class="flex items-center gap-2"><input type="checkbox" id="irrigation" class="w-4 h-4"> <span>🚜 सिंचाई उपलब्ध (Irrigation)</span></label>
-                <button id="analyzeBtn" class="ml-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full shadow-md transition"><i class="fas fa-calculator"></i> गणना करें</button>
-            </div>
+      <form id="cropForm" class="space-y-4" onsubmit="return false;">
+        <div>
+          <label class="text-sm font-medium text-gray-700">District (UP)</label>
+          <select id="district" class="w-full mt-1 px-3 py-2 border rounded-md">
+            <option value="">-- choose district --</option>
+            <option value="Lucknow">Lucknow</option><option value="Agra">Agra</option><option value="Gorakhpur">Gorakhpur</option><option value="Varanasi">Varanasi</option><option value="Jhansi">Jhansi</option>
+          </select>
         </div>
-
-        <!-- RIGHT PANEL: TABS + OUTPUT -->
-        <div class="lg:col-span-2 space-y-4">
-            <!-- Tabs -->
-            <div class="flex border-b border-gray-200 gap-1 bg-white rounded-t-xl p-2 shadow-sm">
-                <button id="tabAnalysis" class="tab-btn tab-active px-6 py-2 rounded-lg font-medium text-sm transition-all" data-tab="analysis"><i class="fas fa-chart-line mr-2"></i>विश्लेषण (Analysis)</button>
-                <button id="tabProfit" class="tab-btn px-6 py-2 rounded-lg font-medium text-sm hover:bg-gray-100" data-tab="profit"><i class="fas fa-rupee-sign mr-2"></i>लाभ (Profit)</button>
-                <div class="flex-1 text-right">
-                    <button id="listenBtn" class="voice-btn bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-full px-4 py-1.5 text-sm font-medium transition disabled:opacity-50 disabled:pointer-events-none" disabled>
-                        <i class="fas fa-microphone"></i><span class="btn-text ml-1">Listen Report</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- loader (hidden by default) -->
-            <div id="loader" class="hidden loader"></div>
-
-            <!-- ANALYSIS TAB CONTENT -->
-            <div id="analysisContent" class="tab-content bg-white rounded-2xl shadow-lg p-5 space-y-5">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                    <div class="bg-green-50 p-3 rounded-xl"><span class="text-xs text-gray-500">GROWTH SCORE</span><div class="text-2xl font-bold text-green-700" id="growthScore">0%</div></div>
-                    <div class="bg-blue-50 p-3 rounded-xl"><span class="text-xs text-gray-500">अपेक्षित उपज (t/ha)</span><div class="text-2xl font-bold text-blue-700" id="yieldVal">0.0</div></div>
-                    <div class="bg-yellow-50 p-3 rounded-xl"><span class="text-xs text-gray-500">रोग जोखिम</span><div class="text-lg font-bold text-yellow-700" id="diseaseRisk">0% (Low)</div></div>
-                    <div class="bg-purple-50 p-3 rounded-xl"><span class="text-xs text-gray-500">मृदा उपयुक्तता</span><div class="text-lg font-bold text-purple-700" id="soilScore">0%</div></div>
-                </div>
-
-                <!-- progress bars for scores -->
-                <div class="space-y-2">
-                    <div><div class="flex justify-between text-sm"><span>🌱 मृदा स्कोर</span><span id="soilScoreVal">0%</span></div><div class="progress-bar"><div id="soilBar" class="progress-fill" style="width:0%"></div></div></div>
-                    <div><div class="flex justify-between text-sm"><span>🌤️ मौसम स्कोर</span><span id="weatherScoreVal">0%</span></div><div class="progress-bar"><div id="weatherBar" class="progress-fill" style="width:0%"></div></div></div>
-                    <div><div class="flex justify-between text-sm"><span>🧪 पोषक स्कोर</span><span id="nutrientScoreVal">0%</span></div><div class="progress-bar"><div id="nutrientBar" class="progress-fill" style="width:0%"></div></div></div>
-                    <div><div class="flex justify-between text-sm"><strong>📈 समग्र वृद्धि</strong><strong id="overallGrowthVal">0%</strong></div><div class="progress-bar"><div id="overallBar" class="progress-fill" style="width:0%"></div></div></div>
-                </div>
-
-                <!-- Sensitivity Impact Row (new) -->
-                <div class="grid grid-cols-3 gap-2 text-xs text-center font-medium">
-                    <div class="bg-blue-100 p-2 rounded">🌱 मृदा प्रभाव: <span id="sensSoil">0</span>%</div>
-                    <div class="bg-amber-100 p-2 rounded">🧪 पोषक प्रभाव: <span id="sensNutrient">0</span>%</div>
-                    <div class="bg-emerald-100 p-2 rounded">🌤️ मौसम प्रभाव: <span id="sensWeather">0</span>%</div>
-                </div>
-
-                <!-- CHARTS ROW -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div><canvas id="growthChart" height="180"></canvas></div>
-                    <div><canvas id="npkChart" height="180"></canvas></div>
-                </div>
-
-                <!-- Disease & Fertilizer detail -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-red-50 p-4 rounded-xl"><h3 class="font-semibold flex items-center gap-1"><i class="fas fa-biohazard text-red-600"></i> रोग विश्लेषण</h3>
-                        <p id="diseaseName" class="text-lg font-medium">—</p>
-                        <p id="diseaseLevel" class="text-sm"></p>
-                        <ul id="diseaseWarnings" class="list-disc list-inside text-sm mt-2"></ul>
-                    </div>
-                    <div class="bg-amber-50 p-4 rounded-xl"><h3 class="font-semibold flex items-center gap-1"><i class="fas fa-flask text-amber-600"></i> उर्वरक सलाह</h3>
-                        <p id="fertNstatus">N: —</p>
-                        <p id="fertPstatus">P: —</p>
-                        <p id="fertKstatus">K: —</p>
-                        <div class="mt-2 text-sm font-mono border-t pt-2">
-                            <p>🌾 यूरिया: <span id="ureaRec">0</span> kg/ha</p>
-                            <p>🧪 डीएपी: <span id="dapRec">0</span> kg/ha</p>
-                            <p>🧂 एमओपी: <span id="mopRec">0</span> kg/ha</p>
-                            <p class="text-xs text-gray-600 mt-1" id="fertExplain"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Penalty info -->
-                <div class="text-xs text-gray-500 border-t pt-2" id="penaltyInfo"></div>
-            </div>
-
-            <!-- PROFIT TAB CONTENT (hidden by default) -->
-            <div id="profitContent" class="tab-content bg-white rounded-2xl shadow-lg p-5 space-y-4 hidden">
-                <h3 class="text-lg font-semibold"><i class="fas fa-coins text-yellow-500"></i> आर्थिक लाभ (FRP 2024-25: ₹315/quintal)</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-100 p-4 rounded-2xl"><span class="text-gray-600">सकल आय</span><div class="text-2xl font-bold" id="grossIncome">₹0</div></div>
-                    <div class="bg-gray-100 p-4 rounded-2xl"><span class="text-gray-600">लागत (UP औसत)</span><div class="text-2xl font-bold">₹1,20,000</div></div>
-                    <div class="bg-gray-100 p-4 rounded-2xl"><span class="text-gray-600">शुद्ध लाभ</span><div class="text-2xl font-bold" id="netProfit">₹0</div></div>
-                    <div class="bg-gray-100 p-4 rounded-2xl"><span class="text-gray-600">ROI</span><div class="text-2xl font-bold" id="roi">0%</div></div>
-                </div>
-                <div class="p-4 bg-blue-50 rounded-xl">
-                    <p><i class="fas fa-trophy text-yellow-500"></i> आपका क्षेत्र <span id="yourYieldField">0</span> t/ha  |  UP बेस्ट किसान 130 t/ha</p>
-                    <p class="text-sm">ब्रेक-ईवन उपज: <span id="breakevenYield">38.1</span> t/ha</p>
-                    <div class="w-full bg-gray-300 h-2 mt-2"><div id="compareBar" class="bg-green-600 h-2" style="width:0%"></div></div>
-                </div>
-                <p class="text-xs text-gray-500" id="profitNote">*लागत ₹1,20,000 प्रति हेक्टेयर (UP सरकारी अनुमान)</p>
-            </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700">Soil texture</label>
+          <select id="soilTexture" class="w-full mt-1 px-3 py-2 border rounded-md">
+            <option value="">-- choose soil type --</option>
+            <option value="Clay Loam">Clay Loam</option><option value="Silty Clay Loam">Silty Clay Loam</option><option value="Silty Loam">Silty Loam</option><option value="Clay">Clay</option><option value="Loam">Loam</option>
+          </select>
         </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div><label class="text-sm">Soil pH (4-9)</label><input id="soilPh" step="0.1" type="number" value="6.8" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">ideal: 6.2–7.5</p></div>
+          <div><label class="text-sm">Soil moisture (%)</label><input id="soilMoisture" type="number" value="70" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">field capacity 70–80%</p></div>
+          <div><label class="text-sm">Nitrogen (N) kg/ha</label><input id="nitrogen" type="number" value="280" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">ideal: 250–350</p></div>
+          <div><label class="text-sm">Phosphorus (P) kg/ha</label><input id="phosphorus" type="number" value="120" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">ideal: 100–150</p></div>
+          <div><label class="text-sm">Potassium (K) kg/ha</label><input id="potassium" type="number" value="200" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">ideal: 180–250</p></div>
+          <div><label class="text-sm">Temperature (°C)</label><input id="temperature" step="0.1" type="number" value="30" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">20–35°C optimal</p></div>
+          <div><label class="text-sm">Humidity (%)</label><input id="humidity" type="number" value="75" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">optimal 60–85%</p></div>
+          <div><label class="text-sm">Rainfall (mm)</label><input id="rainfall" type="number" value="900" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">UP normal 800–1200mm</p></div>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" id="resetBtn" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"><i class="fas fa-redo mr-2"></i>Reset</button>
+          <button type="button" id="calculateBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"><i class="fas fa-calculator mr-2"></i>Calculate</button>
+        </div>
+      </form>
     </div>
+
+    <!-- RESULTS SECTION -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-green-700">Sugarcane Field Report</h2>
+        <button id="diseaseBtn" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-md"><i class="fas fa-bug mr-1"></i>Disease info</button>
+      </div>
+      <button id="downloadImageBtn" class="mb-3 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md"><i class="fas fa-download mr-2"></i>Download report</button>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button id="analysisTab" class="active-tab">Analysis Report</button>
+        <button id="profitTab" disabled class="opacity-50 cursor-not-allowed">Economic Profit</button>
+      </div>
+
+      <div id="resultsContainer" class="space-y-4">
+        <div id="placeholderIntro" class="text-center py-8 text-gray-400"><i class="fas fa-leaf text-4xl mb-2"></i><p class="simple-english">Enter details and click Calculate</p></div>
+        <div id="warningBox" class="hidden bg-red-100 border border-red-200 text-red-800 p-3 rounded-lg flex gap-2 items-center"><i class="fas fa-triangle-exclamation"></i><span id="warningText" class="simple-english">Please fill all fields</span></div>
+        <div id="loaderArea" class="hidden p-4 bg-white rounded-lg border"><div class="flex items-center gap-3"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div><div><div class="font-medium">Analyzing field<span class="dots"></span></div><div class="text-xs text-gray-500">Just a moment...</div></div></div></div>
+
+        <!-- ANALYSIS SECTION -->
+        <div id="analysisSection" class="space-y-4">
+          <!-- ENHANCED VOICE BUTTON -->
+          <div class="flex justify-end">
+            <button id="listenBtn" class="voice-btn" disabled>
+              <i class="fas fa-microphone"></i>
+              <span class="btn-text"> Listen Report</span>
+            </button>
+          </div>
+          
+          <div id="finalResults" class="space-y-4">
+            <!-- Growth Scores -->
+            <div class="bg-green-50 p-4 rounded-lg">
+              <div class="flex justify-between mb-2">
+                <h3 class="font-medium text-green-800">Raw growth score</h3>
+                <span id="growthRawLabel" class="text-lg font-bold text-green-700">0/100</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5 mb-3">
+                <div id="growthRawBar" class="progress-bar bg-green-400 h-2.5 rounded-full" style="width:0%"></div>
+              </div>
+              
+              <div class="flex justify-between">
+                <h3 class="font-medium text-green-800">Adjusted growth (disease + stage + heat)</h3>
+                <span id="growthAdjustedLabel" class="text-lg font-bold text-green-700">0/100</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="growthAdjustedBar" class="progress-bar bg-green-600 h-2.5 rounded-full" style="width:0%"></div>
+              </div>
+            </div>
+            
+            <!-- Yield and Disease -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-medium text-blue-800">Expected yield</h3>
+                <p id="expectedYieldLabel" class="text-2xl font-bold text-blue-700">— t/ha</p>
+                <p class="text-xs text-gray-600">(60–130 t/ha range)</p>
+              </div>
+              <div class="bg-purple-50 p-4 rounded-lg">
+                <h3 class="font-medium text-purple-800">Disease risk</h3>
+                <p id="diseaseRiskLabel" class="text-2xl font-bold text-red-600">—</p>
+                <p id="riskScoreLabel" class="text-xs text-gray-600">score 0%</p>
+              </div>
+            </div>
+            
+            <!-- Soil and Weather -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-yellow-50 p-4 rounded-lg">
+                <h3 class="font-medium text-yellow-800">Soil suitability</h3>
+                <div class="flex items-center"><span id="soilScoreLabel" class="text-2xl font-bold text-yellow-700 mr-2">0%</span>
+                <div class="w-full bg-gray-200 rounded-full h-2.5"><div id="soilBar" class="progress-bar bg-yellow-500 h-2.5 rounded-full" style="width:0%"></div></div></div>
+              </div>
+              <div class="bg-indigo-50 p-4 rounded-lg">
+                <h3 class="font-medium text-indigo-800">Weather suitability</h3>
+                <div class="flex items-center"><span id="weatherScoreLabel" class="text-2xl font-bold text-indigo-700 mr-2">0%</span>
+                <div class="w-full bg-gray-200 rounded-full h-2.5"><div id="weatherBar" class="progress-bar bg-indigo-500 h-2.5 rounded-full" style="width:0%"></div></div></div>
+              </div>
+            </div>
+            
+            <!-- Sensitivity Analysis -->
+            <div class="bg-white border border-gray-200 p-4 rounded-lg">
+              <h3 class="font-medium text-gray-800 mb-3">What affects your crop most?</h3>
+              <div class="space-y-2">
+                <div><div class="flex justify-between text-sm"><span>Soil</span><span id="soilPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="soilPercentBar" class="sensitivity-bar bg-yellow-500" style="width:0%"></div></div></div>
+                <div><div class="flex justify-between text-sm"><span>Nutrients</span><span id="nutrientPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="nutrientPercentBar" class="sensitivity-bar bg-green-500" style="width:0%"></div></div></div>
+                <div><div class="flex justify-between text-sm"><span>Weather</span><span id="weatherPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="weatherPercentBar" class="sensitivity-bar bg-blue-500" style="width:0%"></div></div></div>
+              </div>
+            </div>
+            
+            <!-- FERTILIZER RECOMMENDATION -->
+            <div class="bg-white border-2 border-green-200 p-4 rounded-lg">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-green-800">Fertilizer advice (Urea/DAP/MOP)</h3>
+                <button id="viewDetailsBtn" class="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700">How we calculate</button>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="text-center"><span class="text-sm font-medium">Nitrogen (N)</span><div><span id="nStatusBadge" class="status-badge">—</span></div></div>
+                <div class="text-center"><span class="text-sm font-medium">Phosphorus (P)</span><div><span id="pStatusBadge" class="status-badge">—</span></div></div>
+                <div class="text-center"><span class="text-sm font-medium">Potassium (K)</span><div><span id="kStatusBadge" class="status-badge">—</span></div></div>
+              </div>
+              <div class="grid grid-cols-3 gap-3 mb-4">
+                <div class="bg-blue-50 p-2 rounded text-center"><div class="text-xs text-gray-600">Urea (kg/ha)</div><div class="text-xl font-bold text-blue-700" id="ureaDose">0</div></div>
+                <div class="bg-purple-50 p-2 rounded text-center"><div class="text-xs text-gray-600">DAP (kg/ha)</div><div class="text-xl font-bold text-purple-700" id="dapDose">0</div></div>
+                <div class="bg-amber-50 p-2 rounded text-center"><div class="text-xs text-gray-600">MOP (kg/ha)</div><div class="text-xl font-bold text-amber-700" id="mopDose">0</div></div>
+              </div>
+              <div class="bg-gray-50 p-2 rounded mb-2 text-sm"><span class="font-semibold">Soil efficiency factor:</span> <span id="efficiencyFactor">0%</span></div>
+              <div class="space-y-2 text-sm">
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Nitrogen:</span> <span id="nitrogenMethodText" class="simple-english">—</span></div>
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Phosphorus:</span> <span id="phosphorusMethodText" class="simple-english">—</span></div>
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Potassium:</span> <span id="potassiumMethodText" class="simple-english">—</span></div>
+              </div>
+              <div id="fertilizerWarnings" class="mt-3 space-y-1"></div>
+            </div>
+
+            <!-- charts -->
+            <div class="bg-white p-3 rounded-lg border"><canvas id="compareChart" height="140"></canvas></div>
+            <div class="bg-white p-3 rounded-lg border"><canvas id="npkChart" height="110"></canvas></div>
+          </div>
+        </div>
+
+        <!-- PROFIT SECTION (hidden by default) -->
+        <div id="profitSection" class="hidden space-y-4">
+          <div class="bg-gradient-to-r from-emerald-50 to-green-50 p-5 rounded-xl border border-green-200">
+            <h3 class="text-lg font-bold text-green-800 mb-3">Economic Profit (FRP 2024-25: ₹315/quintal)</h3>
+            <div class="profit-card mb-3">
+              <div class="comparison-row"><span>Gross Income (₹/ha):</span> <span id="grossIncomeVal" class="font-bold">0</span></div>
+              <div class="comparison-row"><span>Net Profit (₹/ha):</span> <span id="netProfitVal" class="font-bold">0</span></div>
+              <div class="comparison-row"><span>Return on Investment (ROI):</span> <span id="roiVal" class="font-bold">0%</span></div>
+              <div class="comparison-row"><span>Break-even Yield (t/ha):</span> <span id="breakevenVal" class="font-bold">0</span></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Cost of cultivation (UP avg): ₹1,20,000/ha</p>
+          </div>
+
+          <!-- BEST POSSIBLE COMPARISON -->
+          <div class="bg-amber-50 p-5 rounded-xl border border-amber-300">
+            <h3 class="text-lg font-bold text-amber-800 mb-3"> Your Field vs Best Possible (UP ideal)</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Your Adjusted Growth</span><p id="yourGrowthComp" class="text-xl font-bold text-green-700">0%</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Best Growth</span><p id="bestGrowthComp" class="text-xl font-bold text-amber-700">0%</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Your Yield</span><p id="yourYieldComp" class="text-xl font-bold text-blue-700">0 t/ha</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Best Yield</span><p id="bestYieldComp" class="text-xl font-bold text-blue-700">130 t/ha</p></div>
+              <div class="bg-white p-3 rounded col-span-2"><span class="font-semibold">Your Net Profit</span><p id="yourProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p></div>
+              <div class="bg-white p-3 rounded col-span-2"><span class="font-semibold">Best Net Profit</span><p id="bestProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Ideal: pH 6.5, moisture 75%, N 280, P 120, K 200, temp 28°C, humidity 75%, rainfall 1000mm</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Disease modal -->
+<div id="diseaseModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto p-6">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🌾 Sugarcane diseases (Uttar Pradesh)</h3><button id="closeModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
+    <table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Disease</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Triggers</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Symptoms</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Prevention</th></tr></thead><tbody id="diseaseTbody"></tbody></table>
+  </div>
+</div>
+
+<!-- Technical modal -->
+<div id="fertilizerModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🧪 Fertilizer calculation - आसान भाषा में समझें</h3><button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
+    <div id="fertilizerDetails" class="space-y-4 simple-english">
+      <!-- populated by JS -->
+    </div>
+  </div>
 </div>
 
 <script>
 (function() {
-    // ----- EXISTING DATA (PRESERVE) -----
-    const districtData = {
-        Lucknow: { soil: 'loamy', rainfall: 900, temp: 30, humidity: 70 },
-        Agra: { soil: 'sandy loam', rainfall: 700, temp: 32, humidity: 55 },
-        Gorakhpur: { soil: 'clay loam', rainfall: 1100, temp: 29, humidity: 80 },
-        Varanasi: { soil: 'silty loam', rainfall: 1000, temp: 31, humidity: 72 },
-        Jhansi: { soil: 'sandy', rainfall: 800, temp: 33, humidity: 50 }
-    };
-    const soilTextureRatings = { 'loamy':0.9, 'sandy loam':0.8, 'clay loam':0.85, 'silty loam':0.88, 'sandy':0.6 };
-    const diseaseData = [
-        { name:'Red Rot', conditions:'highN+highHumidity' },
-        { name:'Smut', conditions:'tempHigh+lowMoist' },
-        { name:'Wilt', conditions:'waterlogging' },
-        { name:'Rust', conditions:'humid80_90+temp20_30' },
-        { name:'Grassy Shoot', conditions:'general' },
-        { name:'Pokkah Boeng', conditions:'highN+waterlogging' },
-        { name:'Leaf Scald', conditions:'general' },
-        { name:'Ratoon Stunting', conditions:'ratoonRepeated' },
-        { name:'Yellow Leaf Disease', conditions:'general' }
-    ];
-    const fertilizerData = {
-        N: { optimal: 250, deficient: '<250', excess: '>350' },
-        P: { optimal: 100, deficient: '<80', excess: '>150' },
-        K: { optimal: 180, deficient: '<140', excess: '>250' }
-    };
+  // ==================== SUGARCANE ENGINE (UP specific) ====================
+  
+  // DOM elements
+  const districtEl = document.getElementById('district');
+  const soilPh = document.getElementById('soilPh');
+  const soilMoisture = document.getElementById('soilMoisture');
+  const soilTexture = document.getElementById('soilTexture');
+  const nitrogen = document.getElementById('nitrogen');
+  const phosphorus = document.getElementById('phosphorus');
+  const potassium = document.getElementById('potassium');
+  const temperature = document.getElementById('temperature');
+  const humidity = document.getElementById('humidity');
+  const rainfall = document.getElementById('rainfall');
+  const cropStageSelect = document.getElementById('cropStage');
+  const irrigationCheck = document.getElementById('irrigation');
+  
+  const calcBtn = document.getElementById('calculateBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const loader = document.getElementById('loaderArea');
+  const finalDiv = document.getElementById('finalResults');
+  const placeholder = document.getElementById('placeholderIntro');
+  const warnBox = document.getElementById('warningBox');
+  const warnText = document.getElementById('warningText');
+  
+  const growthRawLabel = document.getElementById('growthRawLabel');
+  const growthRawBar = document.getElementById('growthRawBar');
+  const growthAdjustedLabel = document.getElementById('growthAdjustedLabel');
+  const growthAdjustedBar = document.getElementById('growthAdjustedBar');
+  const yieldLbl = document.getElementById('expectedYieldLabel');
+  const diseaseLbl = document.getElementById('diseaseRiskLabel');
+  const riskScoreLbl = document.getElementById('riskScoreLabel');
+  const soilScoreLbl = document.getElementById('soilScoreLabel');
+  const soilBar = document.getElementById('soilBar');
+  const weatherScoreLbl = document.getElementById('weatherScoreLabel');
+  const weatherBar = document.getElementById('weatherBar');
+  
+  const soilPercentLabel = document.getElementById('soilPercentLabel');
+  const soilPercentBar = document.getElementById('soilPercentBar');
+  const nutrientPercentLabel = document.getElementById('nutrientPercentLabel');
+  const nutrientPercentBar = document.getElementById('nutrientPercentBar');
+  const weatherPercentLabel = document.getElementById('weatherPercentLabel');
+  const weatherPercentBar = document.getElementById('weatherPercentBar');
+  
+  const nStatusBadge = document.getElementById('nStatusBadge');
+  const pStatusBadge = document.getElementById('pStatusBadge');
+  const kStatusBadge = document.getElementById('kStatusBadge');
+  const ureaDose = document.getElementById('ureaDose');
+  const dapDose = document.getElementById('dapDose');
+  const mopDose = document.getElementById('mopDose');
+  const efficiencyFactor = document.getElementById('efficiencyFactor');
+  const nitrogenMethodText = document.getElementById('nitrogenMethodText');
+  const phosphorusMethodText = document.getElementById('phosphorusMethodText');
+  const potassiumMethodText = document.getElementById('potassiumMethodText');
+  const fertilizerWarnings = document.getElementById('fertilizerWarnings');
+  
+  const viewDetails = document.getElementById('viewDetailsBtn');
+  const downloadBtn = document.getElementById('downloadImageBtn');
+  const diseaseBtn = document.getElementById('diseaseBtn');
+  const diseaseModal = document.getElementById('diseaseModal');
+  const closeModal = document.getElementById('closeModal');
+  const fertModal = document.getElementById('fertilizerModal');
+  const closeFertModal = document.getElementById('closeFertilizerModal');
+  const fertDetails = document.getElementById('fertilizerDetails');
+  
+  let charts = { compare: null, npk: null };
 
-    // ----- DOM elements -----
-    const districtEl = document.getElementById('district');
-    const phEl = document.getElementById('ph');
-    const moistureEl = document.getElementById('moisture');
-    const tempEl = document.getElementById('temp');
-    const humidityEl = document.getElementById('humidity');
-    const rainfallEl = document.getElementById('rainfall');
-    const nEl = document.getElementById('n');
-    const pEl = document.getElementById('p');
-    const kEl = document.getElementById('k');
-    const cropStageEl = document.getElementById('cropStage');
-    const irrigationEl = document.getElementById('irrigation');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const loader = document.getElementById('loader');
-    const listenBtn = document.getElementById('listenBtn');
-    const btnText = listenBtn.querySelector('.btn-text');
+  // Tabs
+  const analysisTab = document.getElementById('analysisTab');
+  const profitTab = document.getElementById('profitTab');
+  const analysisSection = document.getElementById('analysisSection');
+  const profitSection = document.getElementById('profitSection');
+
+  // ========== VOICE ASSISTANT ==========
+  const listenBtn = document.getElementById('listenBtn');
+  const btnText = listenBtn ? listenBtn.querySelector('.btn-text') : null;
+  let lastResult = null;
+  let isSpeaking = false;
+  let currentUtterance = null;
+
+  // profit display elements
+  const grossIncomeVal = document.getElementById('grossIncomeVal');
+  const netProfitVal = document.getElementById('netProfitVal');
+  const roiVal = document.getElementById('roiVal');
+  const breakevenVal = document.getElementById('breakevenVal');
+  const yourGrowthComp = document.getElementById('yourGrowthComp');
+  const bestGrowthComp = document.getElementById('bestGrowthComp');
+  const yourYieldComp = document.getElementById('yourYieldComp');
+  const bestYieldComp = document.getElementById('bestYieldComp');
+  const yourProfitComp = document.getElementById('yourProfitComp');
+  const bestProfitComp = document.getElementById('bestProfitComp');
+
+  // District data (preserved)
+  const districtData = [
+    { district: "Lucknow", soil: 'loamy', pH: 6.9, moisture: 72, nitrogen: 320, phosphorus: 18, potassium: 210, temperature: 29.5, humidity: 78, rainfall: 920 },
+    { district: "Agra", soil: 'sandy loam', pH: 7.2, moisture: 65, nitrogen: 280, phosphorus: 15, potassium: 190, temperature: 30.8, humidity: 70, rainfall: 890 },
+    { district: "Gorakhpur", soil: 'clay loam', pH: 6.6, moisture: 78, nitrogen: 350, phosphorus: 22, potassium: 240, temperature: 28.5, humidity: 84, rainfall: 1150 },
+    { district: "Varanasi", soil: 'silty loam', pH: 6.8, moisture: 68, nitrogen: 300, phosphorus: 20, potassium: 230, temperature: 30.2, humidity: 80, rainfall: 960 },
+    { district: "Jhansi", soil: 'sandy', pH: 7.1, moisture: 64, nitrogen: 260, phosphorus: 12, potassium: 180, temperature: 31.2, humidity: 68, rainfall: 885 }
+  ];
+
+  const soilTextureRatings = { 
+    'loamy':0.9, 'sandy loam':0.8, 'clay loam':0.85, 'silty loam':0.88, 'sandy':0.6,
+    'Clay Loam':0.85, 'Silty Clay Loam':0.88, 'Silty Loam':0.85, 'Clay':0.7, 'Loam':0.9 
+  };
+
+  // Disease data (sugarcane)
+  const diseaseData = [
+    { name: "Red Rot", triggers: "High N (>320) + high humidity (>85%), waterlogging", symptoms: "Reddish internal discoloration, wilting", prevention: "Disease-free setts, improve drainage" },
+    { name: "Smut", triggers: "Temp >35°C + low moisture (<50%)", symptoms: "Black whip-like structure", prevention: "Hot water treatment, resistant varieties" },
+    { name: "Wilt", triggers: "Waterlogging (moisture>90%, rainfall>1200mm)", symptoms: "Yellowing, vascular discoloration", prevention: "Improve drainage, solarization" },
+    { name: "Rust", triggers: "Humidity 80–90%, temp 20–30°C", symptoms: "Orange-brown pustules on leaves", prevention: "Resistant varieties, spacing" },
+    { name: "Grassy Shoot", triggers: "Phytoplasma, insect vectors", symptoms: "Grass-like shoots", prevention: "Disease-free setts" },
+    { name: "Pokkah Boeng", triggers: "High N + waterlogging", symptoms: "Leaf malformation, rotting growing points", prevention: "Improve drainage" },
+    { name: "Ratoon Stunting", triggers: "Repeated ratoon, low K (<140)", symptoms: "Stunted growth, pink discoloration", prevention: "Hot water treatment, sterilize tools" }
+  ];
+
+  // ========== UTILITY FUNCTIONS ==========
+  function stopSpeaking() {
+    try {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (listenBtn) {
+        listenBtn.classList.remove('speaking');
+        const icon = listenBtn.querySelector('i');
+        if (icon) icon.className = 'fas fa-microphone';
+        if (btnText) btnText.textContent = ' Listen Report';
+      }
+      isSpeaking = false;
+      currentUtterance = null;
+    } catch (e) { console.error(e); }
+  }
+
+  function formatCurrency(value) {
+    return '₹ ' + Math.round(value).toLocaleString('en-IN');
+  }
+
+  function softNormalize(value, min, max, ideal) {
+    if (isNaN(value) || value === null) return 0;
+    const sigma = (max - min) / 4;
+    const diff = value - ideal;
+    return Math.exp(-(diff * diff) / (2 * sigma * sigma));
+  }
+
+  function getTextureScore(texture) {
+    return soilTextureRatings[texture] || 0.5;
+  }
+
+  // ========== CORE SUGARCANE SCORING ==========
+  function calculateSoilScore(ph, moisture, texture) {
+    const phNorm = softNormalize(ph, 5.5, 8.0, 6.8);
+    const moistNorm = softNormalize(moisture, 50, 90, 75);
+    const texScore = getTextureScore(texture);
+    return (phNorm * 0.3 + moistNorm * 0.3 + texScore * 0.4) * 100;
+  }
+
+  function calculateWeatherScore(temp, hum, rain, irrig) {
+    let tempScore = softNormalize(temp, 18, 38, 28);
+    let humScore = softNormalize(hum, 50, 90, 75);
+    let rainScore = 1.0;
     
-    // Tabs
-    const tabAnalysisBtn = document.getElementById('tabAnalysis');
-    const tabProfitBtn = document.getElementById('tabProfit');
-    const analysisDiv = document.getElementById('analysisContent');
-    const profitDiv = document.getElementById('profitContent');
-
-    // Charts instances
-    let growthChart, npkChart;
-
-    // Voice globals
-    let lastResult = null;
-    let isSpeaking = false;
-    let currentUtterance = null;
-
-    // ----- Helper: stop speaking -----
-    function stopSpeaking() {
-        try {
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
-            if (listenBtn) {
-                listenBtn.classList.remove('speaking');
-                const icon = listenBtn.querySelector('i');
-                if (icon) icon.className = 'fas fa-microphone';
-                if (btnText) btnText.textContent = ' Listen Report';
-            }
-            isSpeaking = false;
-            currentUtterance = null;
-        } catch (e) { console.error(e); }
+    if (rain < 700) {
+      rainScore = irrig ? 0.7 : 0.4;  // irrigation reduces penalty by ~50%
+    } else if (rain > 1200) {
+      rainScore = 0.6;
+    } else {
+      rainScore = 1.0;
     }
-
-    // ----- speak report -----
-    function speakReport(data) {
-        try {
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
-            const district = districtEl.value || 'कोई जिला नहीं';
-            const stage = cropStageEl.options[cropStageEl.selectedIndex]?.text.split(' ')[0] || 'चयनित';
-            const profit = calculateProfit(data.yield);
-            let diseaseLevelHindi = 'कम';
-            if (data.diseaseLevel === 'Medium') diseaseLevelHindi = 'मध्यम';
-            else if (data.diseaseLevel === 'High') diseaseLevelHindi = 'उच्च';
-
-            const message = `नमस्ते किसान भाई। आपने जिला ${district} चुना है। आपकी गन्ना फसल की स्टेज ${stage} है। आपने जो पैरामीटर्स दिए हैं — जैसे सॉइल पीएच, मॉइश्चर, नाइट्रोजन, फॉस्फोरस, पोटैशियम, टेम्प्रेचर, ह्यूमिडिटी और रेनफॉल — उसी के आधार पर यह रिपोर्ट तैयार की गई है। आपका ग्रोथ स्कोर ${data.growthAdjusted} प्रतिशत है। आपकी अपेक्षित गन्ना उपज लगभग ${data.yield} टन प्रति हेक्टेयर हो सकती है। डिजीज रिस्क लेवल ${diseaseLevelHindi} है। सॉइल सूटेबिलिटी ${data.soilScore} प्रतिशत है। वेदर सूटेबिलिटी ${data.weatherScore} प्रतिशत है। आपका अनुमानित नेट प्रॉफिट लगभग ${Math.abs(Math.round(profit.netProfit))} रुपये ${profit.netProfit < 0 ? 'का नुकसान' : 'का फायदा'} प्रति हेक्टेयर हो सकता है। अब फर्टिलाइजर सलाह: ${data.fertilizer.ureaKgPerHa > 0 ? `आपको लगभग ${data.fertilizer.ureaKgPerHa} किलोग्राम यूरिया डालना चाहिए।` : `यूरिया आपको नहीं डालना है।`} ${data.fertilizer.dapKgPerHa > 0 ? `${data.fertilizer.dapKgPerHa} किलोग्राम डीएपी डालना चाहिए।` : `डीएपी आपको नहीं डालना है।`} ${data.fertilizer.mopKgPerHa > 0 ? `${data.fertilizer.mopKgPerHa} किलोग्राम एमओपी डालना चाहिए।` : `एमओपी आपको नहीं डालना है।`} यह पूरी रिपोर्ट उत्तर प्रदेश की परिस्थितियों और आपके इनपुट के आधार पर बनाई गई है। धन्यवाद।`;
-
-            const utterance = new SpeechSynthesisUtterance(message);
-            utterance.lang = 'hi-IN'; utterance.rate = 0.95; utterance.pitch = 1; utterance.volume = 1;
-            currentUtterance = utterance;
-            utterance.onend = stopSpeaking; utterance.onerror = stopSpeaking;
-            if (listenBtn) {
-                listenBtn.classList.add('speaking');
-                const icon = listenBtn.querySelector('i'); if (icon) icon.className = 'fas fa-stop';
-                if (btnText) btnText.textContent = ' Stop Listening';
-            }
-            isSpeaking = true;
-            window.speechSynthesis.speak(utterance);
-        } catch (e) { console.error(e); stopSpeaking(); alert('वॉइस सिस्टम में समस्या हुई'); }
-    }
-
-    // ----- profit calculator (FRP) -----
-    function calculateProfit(yieldTons) {
-        const gross = yieldTons * 10 * 315; // yield t/ha * 10 quintal/t * 315
-        const cost = 120000;
-        const net = gross - cost;
-        const roi = (net / cost) * 100;
-        const breakeven = 120000 / (10*315); // 38.095
-        return { gross, netProfit: net, roi, breakeven };
-    }
-
-    // ----- validation block -----
-    function validateInputs() {
-        const n=+nEl.value, p=+pEl.value, k=+kEl.value, temp=+tempEl.value, moist=+moistureEl.value, ph=+phEl.value;
-        if (n>600 || p>300 || k>400 || temp>50 || moist>100 || ph<4 || ph>9) {
-            alert("⚠️ मान सीमा से बाहर: N≤600, P≤300, K≤400, तापमान≤50°C, नमी≤100%, pH 4-9");
-            return false;
-        }
-        return true;
-    }
-
-    // Gaussian normalization
-    function gaussian(value, min, max, ideal) {
-        const sigma = (max - min) / 4;
-        const diff = value - ideal;
-        return Math.exp(-(diff * diff) / (2 * sigma * sigma));
-    }
-
-    // ----- main analysis engine (FIXED & ENHANCED) -----
-    function performAnalysis() {
-        if (!validateInputs()) return;
-        stopSpeaking();  // ensure speech stops
-        loader.classList.remove('hidden');
-
-        setTimeout(() => {
-            try {
-                // gather inputs
-                const district = districtEl.value;
-                const soilType = districtData[district].soil;
-                const soilBase = soilTextureRatings[soilType] || 0.8;
-                const ph = +phEl.value; const moisture = +moistureEl.value; const temp = +tempEl.value;
-                const humidity = +humidityEl.value; const rainfall = +rainfallEl.value;
-                const N = +nEl.value; const P = +pEl.value; const K = +kEl.value;
-                const stage = cropStageEl.value; const irrig = irrigationEl.checked;
-
-                // 1. soil score (40% weight)
-                let soilScore = soilBase * 100;
-                if (ph >= 6.2 && ph <= 7.5) soilScore += 5; else if (ph<5.5 || ph>8.2) soilScore -= 10;
-                soilScore = Math.min(100, Math.max(0, soilScore));
-
-                // 2. weather score with fixed rainfall thresholds
-                let weatherScore = 70;
-                if (temp>=20 && temp<=35) weatherScore += 10; else if (temp>38) weatherScore -= 15;
-                // rainfall penalty (UP specific)
-                if (rainfall < 700) {
-                    weatherScore -= irrig ? 7 : 15;   // irrigation reduces penalty by ~50%
-                } else if (rainfall > 1200) {
-                    weatherScore -= 8;  // excess rain penalty
-                } else {
-                    weatherScore += 5;
-                }
-                if (humidity>90) weatherScore -= 10; else if (humidity>=60 && humidity<=85) weatherScore += 5;
-                weatherScore = Math.min(100, Math.max(0, weatherScore));
-
-                // 3. nutrient score using gaussian (FIXED)
-                const Nscore = gaussian(N, 150, 400, 280);
-                const Pscore = gaussian(P, 60, 200, 120);
-                const Kscore = gaussian(K, 100, 300, 180);
-                let nutrientScore = (Nscore * 0.4 + Pscore * 0.3 + Kscore * 0.3) * 100;
-                nutrientScore = Math.min(100, Math.max(0, nutrientScore));
-
-                // 4. growth base (weighted)
-                let growthBase = (soilScore * 0.4) + (nutrientScore * 0.3) + (weatherScore * 0.3);
-                
-                // 5. disease engine (dynamic) – FIXED thresholds
-                let diseaseRisk = 20; // base
-                let diseaseName = "स्वस्थ (Low risk)";
-                let diseaseLevel = "Low";
-                let warnings = [];
-                if (N>320 && humidity>85) { diseaseRisk += 25; warnings.push('Red Rot High Risk'); }
-                else if (N>300 && humidity>80) { diseaseRisk += 15; warnings.push('Red Rot संभावित'); }
-                if (temp>35 && moisture<50) { diseaseRisk += 15; warnings.push('Smut संभावित'); }
-                // fixed waterlogging: rainfall > 1200 OR moisture>90
-                if (rainfall > 1200 && moisture > 85) { diseaseRisk += 20; warnings.push('Wilt संभावित'); }
-                if (moisture > 90) { diseaseRisk += 15; warnings.push('Waterlogging Wilt'); }
-                if (humidity>=80 && humidity<=90 && temp>=20 && temp<=30) { diseaseRisk += 10; warnings.push('Rust संभावित'); }
-                if (N>320 && rainfall>150) { diseaseRisk += 15; warnings.push('Pokkah Boeng'); }
-                if (stage==='Ratoon' && K<140) { diseaseRisk += 20; warnings.push('Ratoon Stunting'); }
-                if (stage==='Ratoon' && diseaseRisk>60) warnings.push('Ratoon में उच्च जोखिम');
-                
-                diseaseRisk = Math.min(90, diseaseRisk); // capped at 90%
-                if (diseaseRisk > 50) diseaseLevel = "High"; else if (diseaseRisk > 25) diseaseLevel = "Medium";
-                if (warnings.length) diseaseName = warnings.join(', ');
-                else diseaseName = 'कोई गंभीर रोग नहीं';
-
-                // disease penalty
-                let diseasePenalty = 1.0;
-                if (diseaseRisk > 60) diseasePenalty = 0.8;
-                else if (diseaseRisk > 40) diseasePenalty = 0.9;
-                else if (diseaseRisk > 20) diseasePenalty = 0.95;
-
-                // 6. stage penalties (apply after disease)
-                let stagePenalty = 1.0;
-                if (stage === 'Germination') { if (moisture>85) stagePenalty *= 0.9; if (temp<18) stagePenalty *= 0.85; }
-                else if (stage === 'Tillering') { if (N<250) stagePenalty *= 0.85; if (moisture<65) stagePenalty *= 0.9; }
-                else if (stage === 'Grand Growth') { if (temp>38) stagePenalty *= 0.8; if (!irrig && rainfall<700) stagePenalty *= 0.85; }
-                else if (stage === 'Maturity') { if (N>350) stagePenalty *= 0.88; if (humidity>90) stagePenalty *= 0.9; }
-                else if (stage === 'Ratoon') { if (K<140) stagePenalty *= 0.85; if (diseaseRisk>60) stagePenalty *= 0.8; }
-
-                // combine penalties & growth (floor now 5)
-                let growthAdjusted = growthBase * diseasePenalty * stagePenalty;
-                growthAdjusted = Math.min(100, Math.max(5, growthAdjusted));
-
-                // logistic yield curve (60-120 baseline, cap 130)
-                let yieldBase = 60 + (growthAdjusted/100)*60; // 60-120
-                yieldBase = yieldBase * (0.9 + (soilBase*0.1)); // fine tune
-                let finalYield = Math.min(130, Math.max(20, Math.round(yieldBase * 10)/10));
-
-                // 7. fertilizer recommendation with clean logic & safety caps
-                const nVal = N, pVal = P, kVal = K;
-                let nStatus = nVal<200?'Deficient':(nVal>350?'Excess':'Optimal');
-                let pStatus = pVal<80?'Deficient':(pVal>150?'Excess':'Optimal');
-                let kStatus = kVal<140?'Deficient':(kVal>250?'Excess':'Optimal');
-
-                const soilEff = soilBase; 
-                // clean IF based recommendation
-                let urea = 0, dap = 0, mop = 0;
-                if (nVal < fertilizerData.N.optimal) {
-                    urea = (fertilizerData.N.optimal - nVal) * 2.17 * soilEff;
-                }
-                if (pVal < fertilizerData.P.optimal) {
-                    dap = (fertilizerData.P.optimal - pVal) * 2.0 * soilEff;
-                }
-                if (kVal < fertilizerData.K.optimal) {
-                    mop = (fertilizerData.K.optimal - kVal) * 1.67 * soilEff;
-                }
-                // safety caps
-                urea = Math.min(550, Math.max(0, Math.round(urea)));
-                dap = Math.min(300, Math.max(0, Math.round(dap)));
-                mop = Math.min(250, Math.max(0, Math.round(mop)));
-
-                let fertExplain = `मृदा दक्षता कारक ${Math.round(soilEff*100)}% के आधार पर सलाह.`;
-
-                // 8. sensitivity analysis (soil/nutrient/weather impact on total)
-                const totalWeighted = (soilScore*0.4) + (nutrientScore*0.3) + (weatherScore*0.3);
-                const sensSoil = totalWeighted > 0 ? Math.round((soilScore*0.4 / totalWeighted)*100) : 0;
-                const sensNutrient = totalWeighted > 0 ? Math.round((nutrientScore*0.3 / totalWeighted)*100) : 0;
-                const sensWeather = totalWeighted > 0 ? Math.round((weatherScore*0.3 / totalWeighted)*100) : 0;
-
-                const profit = calculateProfit(finalYield);
-                const result = {
-                    soilScore: Math.round(soilScore), weatherScore: Math.round(weatherScore),
-                    nutrientScore: Math.round(nutrientScore), growthAdjusted: Math.round(growthAdjusted),
-                    yield: finalYield, diseaseRisk, diseaseLevel, diseaseName, warnings,
-                    fertilizer: { ureaKgPerHa: urea, dapKgPerHa: dap, mopKgPerHa: mop, nStatus, pStatus, kStatus, fertExplain },
-                    profit,
-                    sensitivity: { soil: sensSoil, nutrient: sensNutrient, weather: sensWeather }
-                };
-                lastResult = result;
-                updateUI(result);
-                updateCharts(result);
-                
-                // Voice state reset + enable listen button
-                isSpeaking = false; 
-                listenBtn.disabled = false;
-                listenBtn.classList.remove('speaking');
-                const icon = listenBtn.querySelector('i');
-                if (icon) icon.className = 'fas fa-microphone';
-                if (btnText) btnText.textContent = ' Listen Report';
-                
-            } catch (e) { console.error(e); alert('विश्लेषण में त्रुटि'); } finally {
-                loader.classList.add('hidden');
-            }
-        }, 300);
-    }
-
-    function updateUI(r) {
-        document.getElementById('growthScore').innerText = r.growthAdjusted+'%';
-        document.getElementById('yieldVal').innerText = r.yield;
-        document.getElementById('diseaseRisk').innerHTML = `${r.diseaseRisk}% (${r.diseaseLevel})`;
-        document.getElementById('soilScore').innerText = r.soilScore+'%';
-        document.getElementById('soilScoreVal').innerText = r.soilScore+'%';
-        document.getElementById('weatherScoreVal').innerText = r.weatherScore+'%';
-        document.getElementById('nutrientScoreVal').innerText = r.nutrientScore+'%';
-        document.getElementById('overallGrowthVal').innerText = r.growthAdjusted+'%';
-        document.getElementById('soilBar').style.width = r.soilScore+'%';
-        document.getElementById('weatherBar').style.width = r.weatherScore+'%';
-        document.getElementById('nutrientBar').style.width = r.nutrientScore+'%';
-        document.getElementById('overallBar').style.width = r.growthAdjusted+'%';
-        document.getElementById('diseaseName').innerText = r.diseaseName;
-        document.getElementById('diseaseLevel').innerText = `जोखिम स्तर: ${r.diseaseLevel}`;
-        let warnHtml = ''; r.warnings.forEach(w=>warnHtml+=`<li>${w}</li>`);
-        document.getElementById('diseaseWarnings').innerHTML = warnHtml || '<li>कोई चेतावनी नहीं</li>';
-
-        document.getElementById('fertNstatus').innerHTML = `नाइट्रोजन (N): ${r.fertilizer.nStatus}`;
-        document.getElementById('fertPstatus').innerHTML = `फॉस्फोरस (P): ${r.fertilizer.pStatus}`;
-        document.getElementById('fertKstatus').innerHTML = `पोटैशियम (K): ${r.fertilizer.kStatus}`;
-        document.getElementById('ureaRec').innerText = r.fertilizer.ureaKgPerHa;
-        document.getElementById('dapRec').innerText = r.fertilizer.dapKgPerHa;
-        document.getElementById('mopRec').innerText = r.fertilizer.mopKgPerHa;
-        document.getElementById('fertExplain').innerText = r.fertilizer.fertExplain;
-
-        // sensitivity display
-        document.getElementById('sensSoil').innerText = r.sensitivity?.soil || 0;
-        document.getElementById('sensNutrient').innerText = r.sensitivity?.nutrient || 0;
-        document.getElementById('sensWeather').innerText = r.sensitivity?.weather || 0;
-
-        // profit tab
-        document.getElementById('grossIncome').innerText = '₹'+Math.round(r.profit.gross).toLocaleString();
-        document.getElementById('netProfit').innerText = '₹'+Math.round(r.profit.netProfit).toLocaleString();
-        document.getElementById('roi').innerText = r.profit.roi.toFixed(1)+'%';
-        document.getElementById('yourYieldField').innerText = r.yield;
-        const breakeven = 120000/(10*315);
-        document.getElementById('breakevenYield').innerText = breakeven.toFixed(1);
-        let compPercent = Math.min(100, (r.yield / 130)*100);
-        document.getElementById('compareBar').style.width = compPercent+'%';
-    }
-
-    function updateCharts(r) {
-        if (growthChart) growthChart.destroy();
-        if (npkChart) npkChart.destroy();
-        const gCtx = document.getElementById('growthChart').getContext('2d');
-        growthChart = new Chart(gCtx, {
-            type:'bar', data: {
-                labels:['मृदा','पोषक','मौसम','वृद्धि'],
-                datasets:[{ label:'स्कोर (%)', data:[r.soilScore, r.nutrientScore, r.weatherScore, r.growthAdjusted], backgroundColor:['#3b82f6','#f59e0b','#10b981','#8b5cf6'] }]
-            }
-        });
-        const npkCtx = document.getElementById('npkChart').getContext('2d');
-        npkChart = new Chart(npkCtx, {
-            type:'bar', data: {
-                labels:['N','P','K'],
-                datasets:[{ label:'वर्तमान स्तर', data:[+nEl.value, +pEl.value, +kEl.value], backgroundColor:'#f97316' }]
-            }
-        });
-    }
-
-    // ----- event listeners -----
-    analyzeBtn.addEventListener('click', performAnalysis);
     
+    return (tempScore * 0.4 + humScore * 0.3 + rainScore * 0.3) * 100;
+  }
+
+  function calculateNutrientScore(N, P, K) {
+    const nScore = softNormalize(N, 150, 400, 280);
+    const pScore = softNormalize(P, 60, 200, 120);
+    const kScore = softNormalize(K, 100, 300, 180);
+    return (nScore * 0.4 + pScore * 0.3 + kScore * 0.3) * 100;
+  }
+
+  // ========== DISEASE ENGINE (UP specific) ==========
+  function computeDiseaseRisk(N, hum, moisture, rain, K, stage) {
+    let risk = 15; // base
+    let warnings = [];
+    
+    if (N > 320 && hum > 85) { risk += 25; warnings.push("Red Rot high risk (High N + humidity)"); }
+    else if (N > 300 && hum > 80) { risk += 15; warnings.push("Red Rot possible"); }
+    
+    if (temperature.value > 35 && moisture < 50) { risk += 15; warnings.push("Smut risk (heat + dry)"); }
+    
+    if (rain > 1200 && moisture > 85) { risk += 20; warnings.push("Wilt risk (waterlogging)"); }
+    if (moisture > 90) { risk += 15; warnings.push("Waterlogging increases Wilt"); }
+    
+    if (hum >= 80 && hum <= 90 && temperature.value >= 20 && temperature.value <= 30) {
+      risk += 10; warnings.push("Rust favorable conditions");
+    }
+    
+    if (N > 320 && rain > 150) { risk += 15; warnings.push("Pokkah Boeng risk"); }
+    
+    if (stage === 'Ratoon' && K < 140) { risk += 20; warnings.push("Ratoon Stunting risk (low K)"); }
+    
+    risk = Math.min(90, risk);
+    
+    let level = 'Low';
+    if (risk > 50) level = 'High';
+    else if (risk > 25) level = 'Medium';
+    
+    return { level, score: risk, warnings };
+  }
+
+  // ========== STAGE PENALTIES ==========
+  function applyStagePenalty(growth, stage, N, K, temp, moisture, irrig, rain) {
+    let penalty = 0;
+    
+    if (stage === 'Germination') {
+      if (moisture > 85) penalty += 0.10;
+      if (temp < 18) penalty += 0.15;
+    } else if (stage === 'Tillering') {
+      if (N < 250) penalty += 0.15;
+      if (moisture < 65) penalty += 0.10;
+    } else if (stage === 'Grand Growth') {
+      if (temp > 38) penalty += 0.20;
+      if (!irrig && rain < 700) penalty += 0.15;
+    } else if (stage === 'Maturity') {
+      if (N > 350) penalty += 0.12;
+      if (humidity.value > 90) penalty += 0.10;
+    } else if (stage === 'Ratoon') {
+      if (K < 140) penalty += 0.15;
+      // disease risk >60 already handled in diseasePenalty
+    }
+    
+    let adjusted = growth * (1 - penalty);
+    return Math.min(100, Math.max(5, adjusted)); // floor 5%
+  }
+
+  // ========== DISEASE PENALTY ==========
+  function applyDiseasePenalty(growth, diseaseScore) {
+    let factor = 1.0;
+    if (diseaseScore > 60) factor = 0.8;
+    else if (diseaseScore > 40) factor = 0.9;
+    else if (diseaseScore > 20) factor = 0.95;
+    return growth * factor;
+  }
+
+  // ========== HEAT STRESS ==========
+  function applyHeatStress(growth, temp) {
+    if (temp > 38) return growth * 0.75;
+    if (temp > 35) return growth * 0.85;
+    return growth;
+  }
+
+  // ========== LOGISTIC YIELD (60-130 t/ha) ==========
+  function logisticYield(growth) {
+    const yMin = 60, yMax = 130;
+    return yMin + (yMax - yMin) / (1 + Math.exp(-0.1 * (growth - 50)));
+  }
+
+  // ========== FERTILIZER RECOMMENDATION (sugarcane) ==========
+  function calculateFertilizer(N, P, K, soilScore) {
+    const ideals = { N: 250, P: 100, K: 180 };
+    const conversion = { NtoUrea: 2.17, PtoDAP: 2.0, KtoMOP: 1.67 };
+    const safetyCaps = { Urea: 550, DAP: 300, MOP: 250 };
+    
+    const efficiency = soilScore / 100;
+    let warnings = [];
+    
+    let nStatus = N < 200 ? 'Deficient' : (N > 350 ? 'Excess' : 'Optimal');
+    let pStatus = P < 80 ? 'Deficient' : (P > 150 ? 'Excess' : 'Optimal');
+    let kStatus = K < 140 ? 'Deficient' : (K > 250 ? 'Excess' : 'Optimal');
+    
+    let urea = 0, dap = 0, mop = 0;
+    
+    if (N < ideals.N) urea = (ideals.N - N) * conversion.NtoUrea * efficiency;
+    if (P < ideals.P) dap = (ideals.P - P) * conversion.PtoDAP * efficiency;
+    if (K < ideals.K) mop = (ideals.K - K) * conversion.KtoMOP * efficiency;
+    
+    urea = Math.min(safetyCaps.Urea, Math.max(0, Math.round(urea)));
+    dap = Math.min(safetyCaps.DAP, Math.max(0, Math.round(dap)));
+    mop = Math.min(safetyCaps.MOP, Math.max(0, Math.round(mop)));
+    
+    if (N > 350) warnings.push("Nitrogen excess: do not add urea");
+    if (P > 150) warnings.push("Phosphorus excess: do not add DAP");
+    if (K > 250) warnings.push("Potassium excess: do not add MOP");
+    
+    return {
+      nitrogenStatus: nStatus,
+      phosphorusStatus: pStatus,
+      potassiumStatus: kStatus,
+      ureaKgPerHa: urea,
+      dapKgPerHa: dap,
+      mopKgPerHa: mop,
+      warnings,
+      applicationMethod: {
+        nitrogen: N < 250 ? "Split: 1/2 basal, 1/4 tillering, 1/4 grand growth" : "Maintenance dose only",
+        phosphorus: P < 100 ? "Full dose as basal" : "No P needed",
+        potassium: K < 180 ? "Split: 1/2 basal, 1/2 at tillering" : "No K needed"
+      }
+    };
+  }
+
+  // ========== PROFIT CALCULATION (FRP) ==========
+  function calculateProfit(yieldTons) {
+    const FRP = 315; // ₹ per quintal
+    const cost = 120000; // ₹/ha
+    const quintal = yieldTons * 10;
+    const gross = quintal * FRP;
+    const net = gross - cost;
+    const roi = (net / cost) * 100;
+    const breakeven = cost / (FRP * 10);
+    return { gross, net, roi, breakeven };
+  }
+
+  // ========== BEST POSSIBLE ==========
+  function calculateBestPossible(stage) {
+    const ideal = { ph:6.5, moisture:75, texture:'Loam', N:280, P:120, K:200, temp:28, hum:75, rain:1000 };
+    const soilSc = calculateSoilScore(ideal.ph, ideal.moisture, ideal.texture);
+    const nutrSc = calculateNutrientScore(ideal.N, ideal.P, ideal.K);
+    const weatherSc = calculateWeatherScore(ideal.temp, ideal.hum, ideal.rain, true);
+    const growthRaw = soilSc * 0.4 + nutrSc * 0.3 + weatherSc * 0.3;
+    const disease = computeDiseaseRisk(ideal.N, ideal.hum, ideal.moisture, ideal.rain, ideal.K, stage);
+    let growthAdj = applyDiseasePenalty(growthRaw, disease.score);
+    growthAdj = applyHeatStress(growthAdj, ideal.temp);
+    growthAdj = applyStagePenalty(growthAdj, stage, ideal.N, ideal.K, ideal.temp, ideal.moisture, true, ideal.rain);
+    const yieldVal = logisticYield(growthAdj);
+    const profit = calculateProfit(yieldVal);
+    return { growth: Math.round(growthAdj), yield: Math.round(yieldVal * 10)/10, profit };
+  }
+
+  // ========== SENSITIVITY ==========
+  function calculateSensitivity(soil, nutrient, weather) {
+    const total = soil * 0.4 + nutrient * 0.3 + weather * 0.3;
+    if (total === 0) return { soil:34, nutrient:33, weather:33 };
+    return {
+      soil: Math.round((soil * 0.4 / total) * 100),
+      nutrient: Math.round((nutrient * 0.3 / total) * 100),
+      weather: Math.round((weather * 0.3 / total) * 100)
+    };
+  }
+
+  // ========== VALIDATION ==========
+  function validateInputs() {
+    const errors = [];
+    const N = +nitrogen.value, P = +phosphorus.value, K = +potassium.value;
+    const temp = +temperature.value, moist = +soilMoisture.value, ph = +soilPh.value;
+    if (N > 600) errors.push("N max 600 kg/ha");
+    if (P > 300) errors.push("P max 300 kg/ha");
+    if (K > 400) errors.push("K max 400 kg/ha");
+    if (temp > 50) errors.push("Temp max 50°C");
+    if (moist > 100) errors.push("Moisture max 100%");
+    if (ph < 4 || ph > 9) errors.push("pH must be 4-9");
+    return errors;
+  }
+
+  // ========== MAIN ANALYSIS ==========
+  function performAnalysis() {
+    const errors = validateInputs();
+    if (errors.length > 0) return { error: true, messages: errors };
+    
+    const ph = +soilPh.value;
+    const moist = +soilMoisture.value;
+    const texture = soilTexture.value;
+    const N = +nitrogen.value;
+    const P = +phosphorus.value;
+    const K = +potassium.value;
+    const temp = +temperature.value;
+    const hum = +humidity.value;
+    const rain = +rainfall.value;
+    const stage = cropStageSelect.value;
+    const irrig = irrigationCheck.checked;
+    
+    const soilSc = calculateSoilScore(ph, moist, texture);
+    const nutrSc = calculateNutrientScore(N, P, K);
+    const weatherSc = calculateWeatherScore(temp, hum, rain, irrig);
+    
+    const growthRaw = soilSc * 0.4 + nutrSc * 0.3 + weatherSc * 0.3;
+    
+    const disease = computeDiseaseRisk(N, hum, moist, rain, K, stage);
+    
+    let growthAdj = applyDiseasePenalty(growthRaw, disease.score);
+    growthAdj = applyHeatStress(growthAdj, temp);
+    growthAdj = applyStagePenalty(growthAdj, stage, N, K, temp, moist, irrig, rain);
+    growthAdj = Math.min(100, Math.max(5, growthAdj));
+    
+    const yieldVal = logisticYield(growthAdj);
+    const yieldRounded = Math.round(yieldVal * 10) / 10;
+    
+    const fert = calculateFertilizer(N, P, K, soilSc);
+    const allWarnings = [...disease.warnings, ...fert.warnings];
+    
+    const sensitivity = calculateSensitivity(soilSc, nutrSc, weatherSc);
+    
+    return {
+      error: false,
+      growthRaw: Math.round(growthRaw),
+      growthAdjusted: Math.round(growthAdj),
+      yield: yieldRounded,
+      soilScore: Math.round(soilSc),
+      weatherScore: Math.round(weatherSc),
+      diseaseLevel: disease.level,
+      diseaseScore: disease.score,
+      sensitivity,
+      fertilizer: fert,
+      warnings: allWarnings,
+      N, P, K
+    };
+  }
+
+  // ========== SPEAK REPORT ==========
+  function speakReport(data) {
+    try {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      const district = districtEl.value || 'कोई जिला नहीं';
+      const stage = cropStageSelect.options[cropStageSelect.selectedIndex]?.text.split(' ')[0] || 'चयनित';
+      const profit = calculateProfit(data.yield);
+      
+      let diseaseLevelHindi = 'कम';
+      if (data.diseaseLevel === 'Medium') diseaseLevelHindi = 'मध्यम';
+      else if (data.diseaseLevel === 'High') diseaseLevelHindi = 'उच्च';
+
+      const message = `नमस्ते किसान भाई। आपने जिला ${district} चुना है। आपकी गन्ना फसल की स्टेज ${stage} है। आपने जो पैरामीटर्स दिए हैं — जैसे सॉइल पीएच, मॉइश्चर, नाइट्रोजन, फॉस्फोरस, पोटैशियम, टेम्प्रेचर, ह्यूमिडिटी और रेनफॉल — उसी के आधार पर यह रिपोर्ट तैयार की गई है। आपका ग्रोथ स्कोर ${data.growthAdjusted} प्रतिशत है। आपकी अपेक्षित गन्ना उपज लगभग ${data.yield} टन प्रति हेक्टेयर हो सकती है। डिजीज रिस्क लेवल ${diseaseLevelHindi} है। सॉइल सूटेबिलिटी ${data.soilScore} प्रतिशत है। वेदर सूटेबिलिटी ${data.weatherScore} प्रतिशत है। आपका अनुमानित नेट प्रॉफिट लगभग ${Math.abs(Math.round(profit.net))} रुपये ${profit.net < 0 ? 'का नुकसान' : 'का फायदा'} प्रति हेक्टेयर हो सकता है। अब फर्टिलाइजर सलाह: ${data.fertilizer.ureaKgPerHa > 0 ? `आपको लगभग ${data.fertilizer.ureaKgPerHa} किलोग्राम यूरिया डालना चाहिए।` : `यूरिया आपको नहीं डालना है।`} ${data.fertilizer.dapKgPerHa > 0 ? `${data.fertilizer.dapKgPerHa} किलोग्राम डीएपी डालना चाहिए।` : `डीएपी आपको नहीं डालना है।`} ${data.fertilizer.mopKgPerHa > 0 ? `${data.fertilizer.mopKgPerHa} किलोग्राम एमओपी डालना चाहिए।` : `एमओपी आपको नहीं डालना है।`} यह पूरी रिपोर्ट उत्तर प्रदेश की परिस्थितियों और आपके इनपुट के आधार पर बनाई गई है। धन्यवाद।`;
+
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = 'hi-IN'; utterance.rate = 0.95; utterance.pitch = 1; utterance.volume = 1;
+      currentUtterance = utterance;
+      utterance.onend = stopSpeaking; utterance.onerror = stopSpeaking;
+      if (listenBtn) {
+        listenBtn.classList.add('speaking');
+        const icon = listenBtn.querySelector('i'); if (icon) icon.className = 'fas fa-stop';
+        if (btnText) btnText.textContent = ' Stop Listening';
+      }
+      isSpeaking = true;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) { console.error(e); stopSpeaking(); alert('वॉइस सिस्टम में समस्या हुई'); }
+  }
+
+  // ========== RENDER RESULTS ==========
+  function renderResults(d) {
+    if (d.error) {
+      warnText.textContent = d.messages.join('. ');
+      warnBox.classList.remove('hidden');
+      finalDiv.classList.add('hidden');
+      return;
+    }
+    
+    growthRawLabel.textContent = d.growthRaw + '/100';
+    growthRawBar.style.width = d.growthRaw + '%';
+    growthAdjustedLabel.textContent = d.growthAdjusted + '/100';
+    growthAdjustedBar.style.width = d.growthAdjusted + '%';
+    yieldLbl.textContent = d.yield + ' t/ha';
+    diseaseLbl.textContent = d.diseaseLevel;
+    diseaseLbl.className = `text-2xl font-bold ${d.diseaseLevel==='Low'?'text-green-600': d.diseaseLevel==='Medium'?'text-yellow-600':'text-red-600'}`;
+    riskScoreLbl.textContent = `risk score ${d.diseaseScore}%`;
+    soilScoreLbl.textContent = d.soilScore + '%';
+    soilBar.style.width = d.soilScore + '%';
+    weatherScoreLbl.textContent = d.weatherScore + '%';
+    weatherBar.style.width = d.weatherScore + '%';
+    
+    soilPercentLabel.textContent = d.sensitivity.soil + '%';
+    soilPercentBar.style.width = d.sensitivity.soil + '%';
+    nutrientPercentLabel.textContent = d.sensitivity.nutrient + '%';
+    nutrientPercentBar.style.width = d.sensitivity.nutrient + '%';
+    weatherPercentLabel.textContent = d.sensitivity.weather + '%';
+    weatherPercentBar.style.width = d.sensitivity.weather + '%';
+    
+    const f = d.fertilizer;
+    nStatusBadge.textContent = f.nitrogenStatus;
+    nStatusBadge.className = `status-badge status-${f.nitrogenStatus.toLowerCase()}`;
+    pStatusBadge.textContent = f.phosphorusStatus;
+    pStatusBadge.className = `status-badge status-${f.phosphorusStatus.toLowerCase()}`;
+    kStatusBadge.textContent = f.potassiumStatus;
+    kStatusBadge.className = `status-badge status-${f.potassiumStatus.toLowerCase()}`;
+    ureaDose.textContent = f.ureaKgPerHa;
+    dapDose.textContent = f.dapKgPerHa;
+    mopDose.textContent = f.mopKgPerHa;
+    efficiencyFactor.textContent = Math.round((d.soilScore / 100) * 100) + '%';
+    nitrogenMethodText.textContent = f.applicationMethod.nitrogen;
+    phosphorusMethodText.textContent = f.applicationMethod.phosphorus;
+    potassiumMethodText.textContent = f.applicationMethod.potassium;
+    
+    fertilizerWarnings.innerHTML = '';
+    d.warnings.forEach(w => {
+      const warnEl = document.createElement('div');
+      warnEl.className = 'text-xs p-2 bg-yellow-50 text-yellow-800 rounded border border-yellow-200';
+      warnEl.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i>${w}`;
+      fertilizerWarnings.appendChild(warnEl);
+    });
+
+    // Charts
+    const compareCanvas = document.getElementById('compareChart');
+    if (compareCanvas) {
+      const ctxComp = compareCanvas.getContext('2d');
+      if (charts.compare) charts.compare.destroy();
+      charts.compare = new Chart(ctxComp, { 
+        type:'bar', 
+        data:{ 
+          labels:['Raw','Adjusted','Soil','Weather'], 
+          datasets:[{ 
+            label:'score', 
+            data:[d.growthRaw, d.growthAdjusted, d.soilScore, d.weatherScore], 
+            backgroundColor:['#84cc16','#16a34a','#f59e0b','#0ea5e9'] 
+          }] 
+        }, 
+        options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{max:100,beginAtZero:true}} } 
+      });
+    }
+    
+    const npkCanvas = document.getElementById('npkChart');
+    if (npkCanvas) {
+      const ctxNpk = npkCanvas.getContext('2d');
+      if (charts.npk) charts.npk.destroy();
+      charts.npk = new Chart(ctxNpk, { 
+        type:'bar', 
+        data:{ 
+          labels:['N','P','K'], 
+          datasets:[{ 
+            label:'kg per hectare', 
+            data:[d.N, d.P, d.K], 
+            backgroundColor:['#15803d','#0ea5e9','#7c3aed'] 
+          }] 
+        }, 
+        options:{ plugins:{legend:{display:false}} } 
+      });
+    }
+
+    finalDiv.classList.remove('hidden');
+
+    // Profit section
+    const profit = calculateProfit(d.yield);
+    grossIncomeVal.innerText = formatCurrency(profit.gross);
+    netProfitVal.innerText = formatCurrency(profit.net);
+    netProfitVal.className = profit.net < 0 ? 'font-bold text-red-600' : 'font-bold text-green-700';
+    roiVal.innerText = profit.roi.toFixed(1) + '%';
+    roiVal.className = profit.roi < 0 ? 'font-bold text-red-600' : 'font-bold text-green-700';
+    breakevenVal.innerText = profit.breakeven.toFixed(1) + ' t/ha';
+
+    // Best possible
+    const best = calculateBestPossible(cropStageSelect.value);
+    yourGrowthComp.innerText = d.growthAdjusted + '%';
+    bestGrowthComp.innerText = best.growth + '%';
+    yourYieldComp.innerText = d.yield + ' t/ha';
+    bestYieldComp.innerText = '130 t/ha';
+    yourProfitComp.innerText = formatCurrency(profit.net) + '/ha';
+    yourProfitComp.className = profit.net < 0 ? 'text-xl font-bold text-red-600' : 'text-xl font-bold text-emerald-700';
+    bestProfitComp.innerText = formatCurrency(best.profit.net) + '/ha';
+  }
+
+  // ========== EVENT HANDLERS ==========
+  function allFilled() {
+    return [districtEl.value, soilTexture.value, soilPh.value, soilMoisture.value, nitrogen.value, phosphorus.value, potassium.value, temperature.value, humidity.value, rainfall.value].every(v => v && v.toString().trim()!=='');
+  }
+
+  let calculationDone = false;
+
+  calcBtn.addEventListener('click', () => {
+    if (isSpeaking) stopSpeaking();
+    warnBox.classList.add('hidden');
+    if (!allFilled()) {
+      warnText.textContent = '⚠ Please fill all fields';
+      warnBox.classList.remove('hidden');
+      placeholder.classList.remove('hidden');
+      loader.classList.add('hidden');
+      finalDiv.classList.add('hidden');
+      return;
+    }
+    placeholder.classList.add('hidden');
+    finalDiv.classList.add('hidden');
+    loader.classList.remove('hidden');
+    setTimeout(() => {
+      const res = performAnalysis();
+      loader.classList.add('hidden');
+      renderResults(res);
+      lastResult = res;
+      if (listenBtn) listenBtn.disabled = false;
+      calculationDone = true;
+      profitTab.disabled = false;
+      profitTab.classList.remove('opacity-50', 'cursor-not-allowed');
+    }, 500);
+  });
+
+  districtEl.addEventListener('change', () => {
+    const d = districtData.find(x => x.district === districtEl.value);
+    if (!d) return;
+    soilPh.value = d.pH;
+    soilMoisture.value = d.moisture;
+    nitrogen.value = d.nitrogen;
+    phosphorus.value = d.phosphorus;
+    potassium.value = d.potassium;
+    temperature.value = d.temperature;
+    humidity.value = d.humidity;
+    rainfall.value = d.rainfall;
+    soilTexture.value = '';
+  });
+
+  resetBtn.addEventListener('click', () => {
+    if (isSpeaking) stopSpeaking();
+    document.getElementById('cropForm').reset();
+    finalDiv.classList.add('hidden'); loader.classList.add('hidden'); placeholder.classList.remove('hidden'); warnBox.classList.add('hidden');
+    Object.values(charts).forEach(ch => { if(ch) ch.destroy(); }); charts = { compare: null, npk: null };
+    lastResult = null;
+    if (listenBtn) listenBtn.disabled = true;
+    calculationDone = false;
+    profitTab.disabled = true;
+    profitTab.classList.add('opacity-50', 'cursor-not-allowed');
+    analysisTab.click();
+  });
+
+  // Voice button
+  if (listenBtn) {
     listenBtn.addEventListener('click', () => {
-        if (!lastResult) { alert('कृपया पहले कैलकुलेट करें'); return; }
-        if (isSpeaking) stopSpeaking(); else speakReport(lastResult);
+      if (!lastResult) { alert('कृपया पहले कैलकुलेट करें'); return; }
+      if (isSpeaking) stopSpeaking(); else speakReport(lastResult);
     });
+  }
 
-    // Tabs
-    tabAnalysisBtn.addEventListener('click',()=>{
-        tabAnalysisBtn.classList.add('tab-active'); tabProfitBtn.classList.remove('tab-active');
-        analysisDiv.classList.remove('hidden'); profitDiv.classList.add('hidden');
-    });
-    tabProfitBtn.addEventListener('click',()=>{
-        tabProfitBtn.classList.add('tab-active'); tabAnalysisBtn.classList.remove('tab-active');
-        profitDiv.classList.remove('hidden'); analysisDiv.classList.add('hidden');
-    });
+  // Window load / unload
+  window.addEventListener('load', () => {
+    try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e){}
+    if (listenBtn) { listenBtn.disabled = true; listenBtn.classList.remove('speaking'); }
+    isSpeaking = false;
+  });
+  window.addEventListener('beforeunload', () => {
+    try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e){}
+  });
 
-    // Reset speaking on beforeunload & load
-    window.addEventListener('beforeunload', stopSpeaking);
-    window.addEventListener('load', ()=>{ stopSpeaking(); listenBtn.disabled=true; });
+  // Disease modal
+  const diseaseTbody = document.getElementById('diseaseTbody');
+  function populateDiseaseTable() {
+    if (!diseaseTbody) return;
+    diseaseTbody.innerHTML = '';
+    diseaseData.forEach(d => {
+      const tr = document.createElement('tr');
+      tr.className = 'disease-row';
+      tr.innerHTML = `<td class="px-6 py-4 font-medium">${d.name}</td><td class="px-6 py-4 text-sm">${d.triggers}</td><td class="px-6 py-4 text-sm">${d.symptoms}</td><td class="px-6 py-4 text-sm">${d.prevention}</td>`;
+      diseaseTbody.appendChild(tr);
+    });
+  }
+  populateDiseaseTable();
+  
+  if (diseaseBtn) diseaseBtn.addEventListener('click', () => diseaseModal.classList.remove('hidden'));
+  if (closeModal) closeModal.addEventListener('click', () => diseaseModal.classList.add('hidden'));
+
+  // Fertilizer modal
+  if (viewDetails) {
+    viewDetails.addEventListener('click', () => {
+      if (fertDetails) { 
+        fertDetails.innerHTML = `
+          <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+            <h4 class="font-bold text-lg text-green-800 mb-3">खाद की सलाह कैसे बनती है?</h4>
+            <div class="space-y-4 text-gray-700">
+              <div><span class="font-semibold">1.</span> नाइट्रोजन, फॉस्फोरस, पोटैशियम की कमी चेक करें</div>
+              <div><span class="font-semibold">2.</span> जितनी कमी, उतनी खाद (यूरिया/डीएपी/एमओपी)</div>
+              <div><span class="font-semibold">3.</span> मिट्टी की गुणवत्ता (efficiency) लागू करें</div>
+              <div><span class="font-semibold">4.</span> सुरक्षा सीमा: यूरिया ≤550, डीएपी ≤300, एमओपी ≤250 किलो/हेक्टेयर</div>
+              <div><span class="font-semibold">5.</span> ज्यादा होने पर खाद न डालें</div>
+            </div>
+          </div>
+        `; 
+      }
+      fertModal.classList.remove('hidden');
+    });
+  }
+  if (closeFertModal) closeFertModal.addEventListener('click', () => fertModal.classList.add('hidden'));
+
+  // Download
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      html2canvas(document.body, { scale:1.5 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `sugarcane_up_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(console.warn);
+    });
+  }
+
+  // Tabs
+  if (analysisTab && profitTab && analysisSection && profitSection) {
+    analysisTab.addEventListener('click', () => {
+      analysisTab.classList.add('active-tab');
+      profitTab.classList.remove('active-tab');
+      analysisSection.classList.remove('hidden');
+      profitSection.classList.add('hidden');
+    });
+    profitTab.addEventListener('click', () => {
+      if (!calculationDone) {
+        alert('Please calculate field analysis first');
+        return;
+      }
+      profitTab.classList.add('active-tab');
+      analysisTab.classList.remove('active-tab');
+      profitSection.classList.remove('hidden');
+      analysisSection.classList.add('hidden');
+    });
+  }
 })();
 </script>
 </body>
