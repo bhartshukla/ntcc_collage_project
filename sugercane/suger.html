@@ -442,4 +442,87 @@
 
     function updateUI(r) {
         document.getElementById('growthScore').innerText = r.growthAdjusted+'%';
-        document.getElementById('yieldVal').innerText =
+        document.getElementById('yieldVal').innerText = r.yield;
+        document.getElementById('diseaseRisk').innerHTML = `${r.diseaseRisk}% (${r.diseaseLevel})`;
+        document.getElementById('soilScore').innerText = r.soilScore+'%';
+        document.getElementById('soilScoreVal').innerText = r.soilScore+'%';
+        document.getElementById('weatherScoreVal').innerText = r.weatherScore+'%';
+        document.getElementById('nutrientScoreVal').innerText = r.nutrientScore+'%';
+        document.getElementById('overallGrowthVal').innerText = r.growthAdjusted+'%';
+        document.getElementById('soilBar').style.width = r.soilScore+'%';
+        document.getElementById('weatherBar').style.width = r.weatherScore+'%';
+        document.getElementById('nutrientBar').style.width = r.nutrientScore+'%';
+        document.getElementById('overallBar').style.width = r.growthAdjusted+'%';
+        document.getElementById('diseaseName').innerText = r.diseaseName;
+        document.getElementById('diseaseLevel').innerText = `जोखिम स्तर: ${r.diseaseLevel}`;
+        let warnHtml = ''; r.warnings.forEach(w=>warnHtml+=`<li>${w}</li>`);
+        document.getElementById('diseaseWarnings').innerHTML = warnHtml || '<li>कोई चेतावनी नहीं</li>';
+
+        document.getElementById('fertNstatus').innerHTML = `नाइट्रोजन (N): ${r.fertilizer.nStatus}`;
+        document.getElementById('fertPstatus').innerHTML = `फॉस्फोरस (P): ${r.fertilizer.pStatus}`;
+        document.getElementById('fertKstatus').innerHTML = `पोटैशियम (K): ${r.fertilizer.kStatus}`;
+        document.getElementById('ureaRec').innerText = r.fertilizer.ureaKgPerHa;
+        document.getElementById('dapRec').innerText = r.fertilizer.dapKgPerHa;
+        document.getElementById('mopRec').innerText = r.fertilizer.mopKgPerHa;
+        document.getElementById('fertExplain').innerText = r.fertilizer.fertExplain;
+
+        // sensitivity display
+        document.getElementById('sensSoil').innerText = r.sensitivity?.soil || 0;
+        document.getElementById('sensNutrient').innerText = r.sensitivity?.nutrient || 0;
+        document.getElementById('sensWeather').innerText = r.sensitivity?.weather || 0;
+
+        // profit tab
+        document.getElementById('grossIncome').innerText = '₹'+Math.round(r.profit.gross).toLocaleString();
+        document.getElementById('netProfit').innerText = '₹'+Math.round(r.profit.netProfit).toLocaleString();
+        document.getElementById('roi').innerText = r.profit.roi.toFixed(1)+'%';
+        document.getElementById('yourYieldField').innerText = r.yield;
+        const breakeven = 120000/(10*315);
+        document.getElementById('breakevenYield').innerText = breakeven.toFixed(1);
+        let compPercent = Math.min(100, (r.yield / 130)*100);
+        document.getElementById('compareBar').style.width = compPercent+'%';
+    }
+
+    function updateCharts(r) {
+        if (growthChart) growthChart.destroy();
+        if (npkChart) npkChart.destroy();
+        const gCtx = document.getElementById('growthChart').getContext('2d');
+        growthChart = new Chart(gCtx, {
+            type:'bar', data: {
+                labels:['मृदा','पोषक','मौसम','वृद्धि'],
+                datasets:[{ label:'स्कोर (%)', data:[r.soilScore, r.nutrientScore, r.weatherScore, r.growthAdjusted], backgroundColor:['#3b82f6','#f59e0b','#10b981','#8b5cf6'] }]
+            }
+        });
+        const npkCtx = document.getElementById('npkChart').getContext('2d');
+        npkChart = new Chart(npkCtx, {
+            type:'bar', data: {
+                labels:['N','P','K'],
+                datasets:[{ label:'वर्तमान स्तर', data:[+nEl.value, +pEl.value, +kEl.value], backgroundColor:'#f97316' }]
+            }
+        });
+    }
+
+    // ----- event listeners -----
+    analyzeBtn.addEventListener('click', performAnalysis);
+    
+    listenBtn.addEventListener('click', () => {
+        if (!lastResult) { alert('कृपया पहले कैलकुलेट करें'); return; }
+        if (isSpeaking) stopSpeaking(); else speakReport(lastResult);
+    });
+
+    // Tabs
+    tabAnalysisBtn.addEventListener('click',()=>{
+        tabAnalysisBtn.classList.add('tab-active'); tabProfitBtn.classList.remove('tab-active');
+        analysisDiv.classList.remove('hidden'); profitDiv.classList.add('hidden');
+    });
+    tabProfitBtn.addEventListener('click',()=>{
+        tabProfitBtn.classList.add('tab-active'); tabAnalysisBtn.classList.remove('tab-active');
+        profitDiv.classList.remove('hidden'); analysisDiv.classList.add('hidden');
+    });
+
+    // Reset speaking on beforeunload & load
+    window.addEventListener('beforeunload', stopSpeaking);
+    window.addEventListener('load', ()=>{ stopSpeaking(); listenBtn.disabled=true; });
+})();
+</script>
+</body>
+</html>
