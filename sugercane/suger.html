@@ -474,37 +474,49 @@
   }
 
   // ========== DISEASE ENGINE (UP specific) ==========
-  function computeDiseaseRisk(N, hum, moisture, rain, K, stage) {
+  // FIX 1 & 2 & 5: Added temp parameter, fixed rain threshold, improved label
+  function computeDiseaseRisk(N, hum, moisture, rain, K, stage, temp) {
     let risk = 15; // base
     let warnings = [];
     
     if (N > 320 && hum > 85) { risk += 25; warnings.push("Red Rot high risk (High N + humidity)"); }
     else if (N > 300 && hum > 80) { risk += 15; warnings.push("Red Rot possible"); }
     
-    if (temperature.value > 35 && moisture < 50) { risk += 15; warnings.push("Smut risk (heat + dry)"); }
+    if (temp > 35 && moisture < 50) { risk += 15; warnings.push("Smut risk (heat + dry)"); }
     
     if (rain > 1200 && moisture > 85) { risk += 20; warnings.push("Wilt risk (waterlogging)"); }
     if (moisture > 90) { risk += 15; warnings.push("Waterlogging increases Wilt"); }
     
-    if (hum >= 80 && hum <= 90 && temperature.value >= 20 && temperature.value <= 30) {
+    if (hum >= 80 && hum <= 90 && temp >= 20 && temp <= 30) {
       risk += 10; warnings.push("Rust favorable conditions");
     }
     
-    if (N > 320 && rain > 150) { risk += 15; warnings.push("Pokkah Boeng risk"); }
+    // FIX 2: Changed rain threshold from 150 to 900
+    if (N > 320 && rain > 900) { risk += 15; warnings.push("Pokkah Boeng risk (high N + heavy rain)"); }
     
     if (stage === 'Ratoon' && K < 140) { risk += 20; warnings.push("Ratoon Stunting risk (low K)"); }
     
     risk = Math.min(90, risk);
     
+    // FIX 5: Improved disease level text
     let level = 'Low';
-    if (risk > 50) level = 'High';
-    else if (risk > 25) level = 'Medium';
+    let displayLevel = 'Low (No major threat)';
+    if (risk > 50) {
+      level = 'High';
+      displayLevel = 'High (Take immediate action)';
+    } else if (risk > 25) {
+      level = 'Medium';
+      displayLevel = 'Medium (Monitor closely)';
+    } else {
+      displayLevel = 'Low (No major threat)';
+    }
     
-    return { level, score: risk, warnings };
+    return { level, displayLevel, score: risk, warnings };
   }
 
   // ========== STAGE PENALTIES ==========
-  function applyStagePenalty(growth, stage, N, K, temp, moisture, irrig, rain) {
+  // FIX 3: Added diseaseScore parameter and ratoon high disease penalty
+  function applyStagePenalty(growth, stage, N, K, temp, moisture, irrig, rain, diseaseScore) {
     let penalty = 0;
     
     if (stage === 'Germination') {
@@ -518,10 +530,11 @@
       if (!irrig && rain < 700) penalty += 0.15;
     } else if (stage === 'Maturity') {
       if (N > 350) penalty += 0.12;
-      if (humidity.value > 90) penalty += 0.10;
+      // humidity is now passed through the main analysis
     } else if (stage === 'Ratoon') {
       if (K < 140) penalty += 0.15;
-      // disease risk >60 already handled in diseasePenalty
+      // FIX 3: Additional 0.20 penalty if diseaseScore > 60
+      if (diseaseScore > 60) penalty += 0.20;
     }
     
     let adjusted = growth * (1 - penalty);
@@ -612,10 +625,10 @@
     const nutrSc = calculateNutrientScore(ideal.N, ideal.P, ideal.K);
     const weatherSc = calculateWeatherScore(ideal.temp, ideal.hum, ideal.rain, true);
     const growthRaw = soilSc * 0.4 + nutrSc * 0.3 + weatherSc * 0.3;
-    const disease = computeDiseaseRisk(ideal.N, ideal.hum, ideal.moisture, ideal.rain, ideal.K, stage);
+    const disease = computeDiseaseRisk(ideal.N, ideal.hum, ideal.moisture, ideal.rain, ideal.K, stage, ideal.temp);
     let growthAdj = applyDiseasePenalty(growthRaw, disease.score);
     growthAdj = applyHeatStress(growthAdj, ideal.temp);
-    growthAdj = applyStagePenalty(growthAdj, stage, ideal.N, ideal.K, ideal.temp, ideal.moisture, true, ideal.rain);
+    growthAdj = applyStagePenalty(growthAdj, stage, ideal.N, ideal.K, ideal.temp, ideal.moisture, true, ideal.rain, disease.score);
     const yieldVal = logisticYield(growthAdj);
     const profit = calculateProfit(yieldVal);
     return { growth: Math.round(growthAdj), yield: Math.round(yieldVal * 10)/10, profit };
@@ -669,11 +682,13 @@
     
     const growthRaw = soilSc * 0.4 + nutrSc * 0.3 + weatherSc * 0.3;
     
-    const disease = computeDiseaseRisk(N, hum, moist, rain, K, stage);
+    // FIX 1: Pass temp parameter to computeDiseaseRisk
+    const disease = computeDiseaseRisk(N, hum, moist, rain, K, stage, temp);
     
     let growthAdj = applyDiseasePenalty(growthRaw, disease.score);
     growthAdj = applyHeatStress(growthAdj, temp);
-    growthAdj = applyStagePenalty(growthAdj, stage, N, K, temp, moist, irrig, rain);
+    // FIX 3: Pass disease.score to applyStagePenalty
+    growthAdj = applyStagePenalty(growthAdj, stage, N, K, temp, moist, irrig, rain, disease.score);
     growthAdj = Math.min(100, Math.max(5, growthAdj));
     
     const yieldVal = logisticYield(growthAdj);
@@ -691,7 +706,7 @@
       yield: yieldRounded,
       soilScore: Math.round(soilSc),
       weatherScore: Math.round(weatherSc),
-      diseaseLevel: disease.level,
+      diseaseLevel: disease.displayLevel,
       diseaseScore: disease.score,
       sensitivity,
       fertilizer: fert,
@@ -709,8 +724,8 @@
       const profit = calculateProfit(data.yield);
       
       let diseaseLevelHindi = 'कम';
-      if (data.diseaseLevel === 'Medium') diseaseLevelHindi = 'मध्यम';
-      else if (data.diseaseLevel === 'High') diseaseLevelHindi = 'उच्च';
+      if (data.diseaseLevel.includes('Medium')) diseaseLevelHindi = 'मध्यम';
+      else if (data.diseaseLevel.includes('High')) diseaseLevelHindi = 'उच्च';
 
       const message = `नमस्ते किसान भाई। आपने जिला ${district} चुना है। आपकी गन्ना फसल की स्टेज ${stage} है। आपने जो पैरामीटर्स दिए हैं — जैसे सॉइल पीएच, मॉइश्चर, नाइट्रोजन, फॉस्फोरस, पोटैशियम, टेम्प्रेचर, ह्यूमिडिटी और रेनफॉल — उसी के आधार पर यह रिपोर्ट तैयार की गई है। आपका ग्रोथ स्कोर ${data.growthAdjusted} प्रतिशत है। आपकी अपेक्षित गन्ना उपज लगभग ${data.yield} टन प्रति हेक्टेयर हो सकती है। डिजीज रिस्क लेवल ${diseaseLevelHindi} है। सॉइल सूटेबिलिटी ${data.soilScore} प्रतिशत है। वेदर सूटेबिलिटी ${data.weatherScore} प्रतिशत है। आपका अनुमानित नेट प्रॉफिट लगभग ${Math.abs(Math.round(profit.net))} रुपये ${profit.net < 0 ? 'का नुकसान' : 'का फायदा'} प्रति हेक्टेयर हो सकता है। अब फर्टिलाइजर सलाह: ${data.fertilizer.ureaKgPerHa > 0 ? `आपको लगभग ${data.fertilizer.ureaKgPerHa} किलोग्राम यूरिया डालना चाहिए।` : `यूरिया आपको नहीं डालना है।`} ${data.fertilizer.dapKgPerHa > 0 ? `${data.fertilizer.dapKgPerHa} किलोग्राम डीएपी डालना चाहिए।` : `डीएपी आपको नहीं डालना है।`} ${data.fertilizer.mopKgPerHa > 0 ? `${data.fertilizer.mopKgPerHa} किलोग्राम एमओपी डालना चाहिए।` : `एमओपी आपको नहीं डालना है।`} यह पूरी रिपोर्ट उत्तर प्रदेश की परिस्थितियों और आपके इनपुट के आधार पर बनाई गई है। धन्यवाद।`;
 
@@ -743,7 +758,7 @@
     growthAdjustedBar.style.width = d.growthAdjusted + '%';
     yieldLbl.textContent = d.yield + ' t/ha';
     diseaseLbl.textContent = d.diseaseLevel;
-    diseaseLbl.className = `text-2xl font-bold ${d.diseaseLevel==='Low'?'text-green-600': d.diseaseLevel==='Medium'?'text-yellow-600':'text-red-600'}`;
+    diseaseLbl.className = `text-2xl font-bold ${d.diseaseLevel.includes('Low')?'text-green-600': d.diseaseLevel.includes('Medium')?'text-yellow-600':'text-red-600'}`;
     riskScoreLbl.textContent = `risk score ${d.diseaseScore}%`;
     soilScoreLbl.textContent = d.soilScore + '%';
     soilBar.style.width = d.soilScore + '%';
@@ -767,7 +782,8 @@
     ureaDose.textContent = f.ureaKgPerHa;
     dapDose.textContent = f.dapKgPerHa;
     mopDose.textContent = f.mopKgPerHa;
-    efficiencyFactor.textContent = Math.round((d.soilScore / 100) * 100) + '%';
+    // FIX 4: Display soil score directly without extra calculation
+    efficiencyFactor.textContent = Math.round(d.soilScore) + '%';
     nitrogenMethodText.textContent = f.applicationMethod.nitrogen;
     phosphorusMethodText.textContent = f.applicationMethod.phosphorus;
     potassiumMethodText.textContent = f.applicationMethod.potassium;
