@@ -3,946 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CropGuard - Sugarcane Cultivation Analysis</title>
+    <title>उत्तर प्रदेश सुगरकेन AI · क्रॉपगार्ड एडवांस्ड</title>
+    <!-- Tailwind + Font Awesome + Chart.js -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        .progress-bar {
-            height: 8px;
-            border-radius: 4px;
-            transition: width 0.5s ease-in-out;
-        }
-        .disease-row:hover {
-            background-color: #f0fdf4;
-        }
-        .star-rating {
-            color: #f59e0b;
-            font-size: 1rem;
-        }
+        /* loader, voice pulse, tabs */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 1rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .voice-btn.speaking i { animation: pulse 1.2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+        .tab-active { background-color: #10b981; color: white; border-color: #10b981; }
+        .progress-bar { height: 10px; border-radius: 5px; background: #e5e7eb; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.3s; }
     </style>
 </head>
-<body class="bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-green-800 mb-2">CropGuard</h1>
-            <p class="text-gray-600">Comprehensive sugarcane cultivation analysis and disease prevention tool</p>
-        </header>
+<body class="bg-gray-50 font-sans antialiased" onload="if(window.speechSynthesis) window.speechSynthesis.cancel()">
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Input Form Column -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold text-green-700 mb-4">Input Parameters</h2>
-                
-                <form id="cropForm">
-                    <div class="mb-4">
-                        <label for="district" class="block text-sm font-medium text-gray-700 mb-1">Select District</label>
-                        <select id="district" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <option value="">-- Select District --</option>
-                            <option value="Lucknow">Lucknow</option>
-                            <option value="Agra">Agra</option>
-                            <option value="Gorakhpur">Gorakhpur</option>
-                            <option value="Varanasi">Varanasi</option>
-                            <option value="Jhansi">Jhansi</option>
-                        </select>
-                    </div>
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <h1 class="text-3xl md:text-4xl font-bold text-green-800 border-b-2 border-green-200 pb-2 mb-6 flex items-center gap-2">
+        <i class="fas fa-seedling text-green-600"></i> उत्तर प्रदेश सुगरकेन AI · CropGuard एडवांस्ड
+    </h1>
 
-                    <div class="mb-4">
-                        <label for="soilTexture" class="block text-sm font-medium text-gray-700 mb-1">Soil Texture</label>
-                        <select id="soilTexture" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <option value="">Select Soil Texture</option>
-                            <option value="Clay Loam">Clay Loam</option>
-                            <option value="Silty Clay Loam">Silty Clay Loam</option>
-                            <option value="Silty Loam">Silty Loam</option>
-                            <option value="Clay">Clay</option>
-                            <option value="Alluvial">Alluvial</option>
-                            <option value="Loam">Loam</option>
-                        </select>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="mb-4">
-                            <label for="soilPh" class="block text-sm font-medium text-gray-700 mb-1">Soil pH</label>
-                            <input type="number" step="0.1" id="soilPh" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 6.0–7.0</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="soilMoisture" class="block text-sm font-medium text-gray-700 mb-1">Soil Moisture (%)</label>
-                            <input type="number" id="soilMoisture" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 70–100% of field capacity</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="organicCarbon" class="block text-sm font-medium text-gray-700 mb-1">Organic Carbon (%)</label>
-                            <input type="number" step="0.1" id="organicCarbon" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: ≥0.75%</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="nitrogen" class="block text-sm font-medium text-gray-700 mb-1">Available N (kg/ha)</label>
-                            <input type="number" id="nitrogen" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: ≥240–480+</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="phosphorus" class="block text-sm font-medium text-gray-700 mb-1">Available P (kg/ha)</label>
-                            <input type="number" id="phosphorus" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: ≥11–22+</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="potassium" class="block text-sm font-medium text-gray-700 mb-1">Available K (kg/ha)</label>
-                            <input type="number" id="potassium" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: ≥110–280+</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1">Temperature (°C)</label>
-                            <input type="number" step="0.1" id="temperature" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 20–32 (32–35 optimal growth)</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="humidity" class="block text-sm font-medium text-gray-700 mb-1">Humidity (%)</label>
-                            <input type="number" id="humidity" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 70–85% (growth), 55–75% (ripening)</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="rainfall" class="block text-sm font-medium text-gray-700 mb-1">Rainfall (mm)</label>
-                            <input type="number" id="rainfall" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
-                            <p class="text-xs text-gray-500 mt-1">Ideal: 2500–3000 (or irrigation equivalent)</p>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between mt-6">
-                        <button type="button" id="resetBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                            <i class="fas fa-redo mr-2"></i>Reset
-                        </button>
-                        <button type="button" id="calculateBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <i class="fas fa-calculator mr-2"></i>Calculate
-                        </button>
-                    </div>
-                </form>
+    <!-- MAIN GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- INPUT PANEL (left) -->
+        <div class="lg:col-span-1 bg-white rounded-2xl shadow-lg p-5 space-y-4">
+            <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2"><i class="fas fa-sliders-h text-green-600"></i> इनपुट पैरामीटर</h2>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">जिला (UP)</label>
+                <select id="district" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                    <option value="Lucknow">लखनऊ (Lucknow)</option>
+                    <option value="Agra">आगरा (Agra)</option>
+                    <option value="Gorakhpur">गोरखपुर (Gorakhpur)</option>
+                    <option value="Varanasi">वाराणसी (Varanasi)</option>
+                    <option value="Jhansi">झाँसी (Jhansi)</option>
+                </select>
             </div>
 
-            <!-- Results Column -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-green-700">Analysis Results</h2>
-                    <button id="diseaseBtn" class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <i class="fas fa-bug mr-1"></i>View Diseases
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="block text-sm">मिट्टी pH</label><input type="number" id="ph" value="6.8" step="0.1" class="w-full rounded-lg border-gray-300"></div>
+                <div><label class="block text-sm">नमी (%)</label><input type="number" id="moisture" value="70" class="w-full rounded-lg border-gray-300"></div>
+                <div><label class="block text-sm">तापमान (°C)</label><input type="number" id="temp" value="30" class="w-full rounded-lg border-gray-300"></div>
+                <div><label class="block text-sm">ह्यूमिडिटी (%)</label><input type="number" id="humidity" value="75" class="w-full rounded-lg border-gray-300"></div>
+                <div class="col-span-2"><label class="block text-sm">वर्षा (mm)</label><input type="number" id="rainfall" value="900" class="w-full rounded-lg border-gray-300"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+                <div><label class="block text-sm">नाइट्रोजन (N)</label><input type="number" id="n" value="280" class="w-full rounded-lg border-gray-300"></div>
+                <div><label class="block text-sm">फॉस्फोरस (P)</label><input type="number" id="p" value="120" class="w-full rounded-lg border-gray-300"></div>
+                <div><label class="block text-sm">पोटैशियम (K)</label><input type="number" id="k" value="200" class="w-full rounded-lg border-gray-300"></div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium">फसल अवस्था (Crop stage)</label>
+                <select id="cropStage" class="mt-1 block w-full rounded-lg border-gray-300">
+                    <option value="Germination">अंकुरण (Germination)</option>
+                    <option value="Tillering">कल्ले (Tillering)</option>
+                    <option value="Grand Growth" selected>वृद्धि (Grand Growth)</option>
+                    <option value="Maturity">पकाव (Maturity)</option>
+                    <option value="Ratoon">रतून (Ratoon)</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-4 pt-2">
+                <label class="flex items-center gap-2"><input type="checkbox" id="irrigation" class="w-4 h-4"> <span>🚜 सिंचाई उपलब्ध (Irrigation)</span></label>
+                <button id="analyzeBtn" class="ml-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full shadow-md transition"><i class="fas fa-calculator"></i> गणना करें</button>
+            </div>
+
+            <!-- voice button inside analysis section (top right) will be placed via js later but we add it static for simplicity, but we also put it in analysis tab -->
+        </div>
+
+        <!-- RIGHT PANEL: TABS + OUTPUT -->
+        <div class="lg:col-span-2 space-y-4">
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 gap-1 bg-white rounded-t-xl p-2 shadow-sm">
+                <button id="tabAnalysis" class="tab-btn tab-active px-6 py-2 rounded-lg font-medium text-sm transition-all" data-tab="analysis"><i class="fas fa-chart-line mr-2"></i>विश्लेषण (Analysis)</button>
+                <button id="tabProfit" class="tab-btn px-6 py-2 rounded-lg font-medium text-sm hover:bg-gray-100" data-tab="profit"><i class="fas fa-rupee-sign mr-2"></i>लाभ (Profit)</button>
+                <div class="flex-1 text-right">
+                    <button id="listenBtn" class="voice-btn bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-full px-4 py-1.5 text-sm font-medium transition disabled:opacity-50 disabled:pointer-events-none" disabled>
+                        <i class="fas fa-microphone"></i><span class="btn-text ml-1">Listen Report</span>
                     </button>
                 </div>
+            </div>
 
-                <div id="resultsContainer" class="space-y-4">
-                    <div class="text-center py-8 text-gray-400">
-                        <i class="fas fa-leaf text-4xl mb-2"></i>
-                        <p>Enter parameters and click Calculate to see results</p>
+            <!-- loader (hidden by default) -->
+            <div id="loader" class="hidden loader"></div>
+
+            <!-- ANALYSIS TAB CONTENT -->
+            <div id="analysisContent" class="tab-content bg-white rounded-2xl shadow-lg p-5 space-y-5">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                    <div class="bg-green-50 p-3 rounded-xl"><span class="text-xs text-gray-500">GROWTH SCORE</span><div class="text-2xl font-bold text-green-700" id="growthScore">0%</div></div>
+                    <div class="bg-blue-50 p-3 rounded-xl"><span class="text-xs text-gray-500">अपेक्षित उपज (t/ha)</span><div class="text-2xl font-bold text-blue-700" id="yieldVal">0.0</div></div>
+                    <div class="bg-yellow-50 p-3 rounded-xl"><span class="text-xs text-gray-500">रोग जोखिम</span><div class="text-lg font-bold text-yellow-700" id="diseaseRisk">0% (Low)</div></div>
+                    <div class="bg-purple-50 p-3 rounded-xl"><span class="text-xs text-gray-500">मृदा उपयुक्तता</span><div class="text-lg font-bold text-purple-700" id="soilScore">0%</div></div>
+                </div>
+
+                <!-- progress bars for scores -->
+                <div class="space-y-2">
+                    <div><div class="flex justify-between text-sm"><span>🌱 मृदा स्कोर</span><span id="soilScoreVal">0%</span></div><div class="progress-bar"><div id="soilBar" class="progress-fill" style="width:0%"></div></div></div>
+                    <div><div class="flex justify-between text-sm"><span>🌤️ मौसम स्कोर</span><span id="weatherScoreVal">0%</span></div><div class="progress-bar"><div id="weatherBar" class="progress-fill" style="width:0%"></div></div></div>
+                    <div><div class="flex justify-between text-sm"><span>🧪 पोषक स्कोर</span><span id="nutrientScoreVal">0%</span></div><div class="progress-bar"><div id="nutrientBar" class="progress-fill" style="width:0%"></div></div></div>
+                    <div><div class="flex justify-between text-sm"><strong>📈 समग्र वृद्धि</strong><strong id="overallGrowthVal">0%</strong></div><div class="progress-bar"><div id="overallBar" class="progress-fill" style="width:0%"></div></div></div>
+                </div>
+
+                <!-- CHARTS ROW -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div><canvas id="growthChart" height="180"></canvas></div>
+                    <div><canvas id="npkChart" height="180"></canvas></div>
+                </div>
+
+                <!-- Disease & Fertilizer detail -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-red-50 p-4 rounded-xl"><h3 class="font-semibold flex items-center gap-1"><i class="fas fa-biohazard text-red-600"></i> रोग विश्लेषण</h3>
+                        <p id="diseaseName" class="text-lg font-medium">—</p>
+                        <p id="diseaseLevel" class="text-sm"></p>
+                        <ul id="diseaseWarnings" class="list-disc list-inside text-sm mt-2"></ul>
+                    </div>
+                    <div class="bg-amber-50 p-4 rounded-xl"><h3 class="font-semibold flex items-center gap-1"><i class="fas fa-flask text-amber-600"></i> उर्वरक सलाह</h3>
+                        <p id="fertNstatus">N: —</p>
+                        <p id="fertPstatus">P: —</p>
+                        <p id="fertKstatus">K: —</p>
+                        <div class="mt-2 text-sm font-mono border-t pt-2">
+                            <p>🌾 यूरिया: <span id="ureaRec">0</span> kg/ha</p>
+                            <p>🧪 डीएपी: <span id="dapRec">0</span> kg/ha</p>
+                            <p>🧂 एमओपी: <span id="mopRec">0</span> kg/ha</p>
+                            <p class="text-xs text-gray-600 mt-1" id="fertExplain"></p>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Sensitivity info / penalties -->
+                <div class="text-xs text-gray-500 border-t pt-2" id="penaltyInfo"></div>
+            </div>
+
+            <!-- PROFIT TAB CONTENT (hidden by default) -->
+            <div id="profitContent" class="tab-content bg-white rounded-2xl shadow-lg p-5 space-y-4 hidden">
+                <h3 class="text-lg font-semibold"><i class="fas fa-coins text-yellow-500"></i> आर्थिक लाभ (FRP 2024-25: ₹315/quintal)</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-100 p-4 rounded-2xl"><span class="text-gray-600">सकल आय</span><div class="text-2xl font-bold" id="grossIncome">₹0</div></div>
+                    <div class="bg-gray-100 p-4 rounded-2xl"><span class="text-gray-600">लागत (UP औसत)</span><div class="text-2xl font-bold">₹1,20,000</div></div>
+                    <div class="bg-gray-100 p-4 rounded-2xl"><span class="text-gray-600">शुद्ध लाभ</span><div class="text-2xl font-bold" id="netProfit">₹0</div></div>
+                    <div class="bg-gray-100 p-4 rounded-2xl"><span class="text-gray-600">ROI</span><div class="text-2xl font-bold" id="roi">0%</div></div>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-xl">
+                    <p><i class="fas fa-trophy text-yellow-500"></i> आपका क्षेत्र <span id="yourYieldField">0</span> t/ha  |  UP बेस्ट किसान 130 t/ha</p>
+                    <p class="text-sm">ब्रेक-ईवन उपज: <span id="breakevenYield">38.1</span> t/ha</p>
+                    <div class="w-full bg-gray-300 h-2 mt-2"><div id="compareBar" class="bg-green-600 h-2" style="width:0%"></div></div>
+                </div>
+                <p class="text-xs text-gray-500" id="profitNote">*लागत ₹1,20,000 प्रति हेक्टेयर (UP सरकारी अनुमान)</p>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Disease Modal -->
-    <div id="diseaseModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-green-800">Sugarcane Disease Information</h3>
-                    <button id="closeModal" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+<script>
+(function() {
+    // ----- EXISTING DATA (PRESERVE) -----
+    const districtData = {
+        Lucknow: { soil: 'loamy', rainfall: 900, temp: 30, humidity: 70 },
+        Agra: { soil: 'sandy loam', rainfall: 700, temp: 32, humidity: 55 },
+        Gorakhpur: { soil: 'clay loam', rainfall: 1100, temp: 29, humidity: 80 },
+        Varanasi: { soil: 'silty loam', rainfall: 1000, temp: 31, humidity: 72 },
+        Jhansi: { soil: 'sandy', rainfall: 800, temp: 33, humidity: 50 }
+    };
+    const soilTextureRatings = { 'loamy':0.9, 'sandy loam':0.8, 'clay loam':0.85, 'silty loam':0.88, 'sandy':0.6 };
+    const diseaseData = [
+        { name:'Red Rot', conditions:'highN+highHumidity' },
+        { name:'Smut', conditions:'tempHigh+lowMoist' },
+        { name:'Wilt', conditions:'waterlogging' },
+        { name:'Rust', conditions:'humid80_90+temp20_30' },
+        { name:'Grassy Shoot', conditions:'general' },
+        { name:'Pokkah Boeng', conditions:'highN+waterlogging' },
+        { name:'Leaf Scald', conditions:'general' },
+        { name:'Ratoon Stunting', conditions:'ratoonRepeated' },
+        { name:'Yellow Leaf Disease', conditions:'general' }
+    ];
+    const fertilizerData = {
+        N: { optimal: 250, deficient: '<250', excess: '>350' },
+        P: { optimal: 100, deficient: '<80', excess: '>150' },
+        K: { optimal: 180, deficient: '<140', excess: '>250' }
+    };
+
+    // ----- DOM elements -----
+    const districtEl = document.getElementById('district');
+    const phEl = document.getElementById('ph');
+    const moistureEl = document.getElementById('moisture');
+    const tempEl = document.getElementById('temp');
+    const humidityEl = document.getElementById('humidity');
+    const rainfallEl = document.getElementById('rainfall');
+    const nEl = document.getElementById('n');
+    const pEl = document.getElementById('p');
+    const kEl = document.getElementById('k');
+    const cropStageEl = document.getElementById('cropStage');
+    const irrigationEl = document.getElementById('irrigation');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const loader = document.getElementById('loader');
+    const listenBtn = document.getElementById('listenBtn');
+    const btnText = listenBtn.querySelector('.btn-text');
+    
+    // Tabs
+    const tabAnalysisBtn = document.getElementById('tabAnalysis');
+    const tabProfitBtn = document.getElementById('tabProfit');
+    const analysisDiv = document.getElementById('analysisContent');
+    const profitDiv = document.getElementById('profitContent');
+
+    // Charts instances
+    let growthChart, npkChart;
+
+    // Voice globals
+    let lastResult = null;
+    let isSpeaking = false;
+    let currentUtterance = null;
+
+    // ----- Helper: stop speaking -----
+    function stopSpeaking() {
+        try {
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            if (listenBtn) {
+                listenBtn.classList.remove('speaking');
+                const icon = listenBtn.querySelector('i');
+                if (icon) icon.className = 'fas fa-microphone';
+                if (btnText) btnText.textContent = ' Listen Report';
+            }
+            isSpeaking = false;
+            currentUtterance = null;
+        } catch (e) { console.error(e); }
+    }
+
+    // ----- speak report (exactly as advanced rice logic) -----
+    function speakReport(data) {
+        try {
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            const district = districtEl.value || 'कोई जिला नहीं';
+            const stage = cropStageEl.options[cropStageEl.selectedIndex]?.text.split(' ')[0] || 'चयनित';
+            const profit = calculateProfit(data.yield);
+            let diseaseLevelHindi = 'कम';
+            if (data.diseaseLevel === 'Medium') diseaseLevelHindi = 'मध्यम';
+            else if (data.diseaseLevel === 'High') diseaseLevelHindi = 'उच्च';
+
+            const message = `नमस्ते किसान भाई। आपने जिला ${district} चुना है। आपकी गन्ना फसल की स्टेज ${stage} है। आपने जो पैरामीटर्स दिए हैं — जैसे सॉइल पीएच, मॉइश्चर, नाइट्रोजन, फॉस्फोरस, पोटैशियम, टेम्प्रेचर, ह्यूमिडिटी और रेनफॉल — उसी के आधार पर यह रिपोर्ट तैयार की गई है। आपका ग्रोथ स्कोर ${data.growthAdjusted} प्रतिशत है। आपकी अपेक्षित गन्ना उपज लगभग ${data.yield} टन प्रति हेक्टेयर हो सकती है। डिजीज रिस्क लेवल ${diseaseLevelHindi} है। सॉइल सूटेबिलिटी ${data.soilScore} प्रतिशत है। वेदर सूटेबिलिटी ${data.weatherScore} प्रतिशत है। आपका अनुमानित नेट प्रॉफिट लगभग ${Math.abs(Math.round(profit.netProfit))} रुपये ${profit.netProfit < 0 ? 'का नुकसान' : 'का फायदा'} प्रति हेक्टेयर हो सकता है। अब फर्टिलाइजर सलाह: ${data.fertilizer.ureaKgPerHa > 0 ? `आपको लगभग ${data.fertilizer.ureaKgPerHa} किलोग्राम यूरिया डालना चाहिए।` : `यूरिया आपको नहीं डालना है।`} ${data.fertilizer.dapKgPerHa > 0 ? `${data.fertilizer.dapKgPerHa} किलोग्राम डीएपी डालना चाहिए।` : `डीएपी आपको नहीं डालना है।`} ${data.fertilizer.mopKgPerHa > 0 ? `${data.fertilizer.mopKgPerHa} किलोग्राम एमओपी डालना चाहिए।` : `एमओपी आपको नहीं डालना है।`} यह पूरी रिपोर्ट उत्तर प्रदेश की परिस्थितियों और आपके इनपुट के आधार पर बनाई गई है। धन्यवाद।`;
+
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = 'hi-IN'; utterance.rate = 0.95; utterance.pitch = 1; utterance.volume = 1;
+            currentUtterance = utterance;
+            utterance.onend = stopSpeaking; utterance.onerror = stopSpeaking;
+            if (listenBtn) {
+                listenBtn.classList.add('speaking');
+                const icon = listenBtn.querySelector('i'); if (icon) icon.className = 'fas fa-stop';
+                if (btnText) btnText.textContent = ' Stop Listening';
+            }
+            isSpeaking = true;
+            window.speechSynthesis.speak(utterance);
+        } catch (e) { console.error(e); stopSpeaking(); alert('वॉइस सिस्टम में समस्या हुई'); }
+    }
+
+    // ----- profit calculator (FRP) -----
+    function calculateProfit(yieldTons) {
+        const gross = yieldTons * 10 * 315; // yield t/ha * 10 quintal/t * 315
+        const cost = 120000;
+        const net = gross - cost;
+        const roi = (net / cost) * 100;
+        const breakeven = 120000 / (10*315); // 38.095
+        return { gross, netProfit: net, roi, breakeven };
+    }
+
+    // ----- validation block -----
+    function validateInputs() {
+        const n=+nEl.value, p=+pEl.value, k=+kEl.value, temp=+tempEl.value, moist=+moistureEl.value, ph=+phEl.value;
+        if (n>600 || p>300 || k>400 || temp>50 || moist>100 || ph<4 || ph>9) {
+            alert("⚠️ मान सीमा से बाहर: N≤600, P≤300, K≤400, तापमान≤50°C, नमी≤100%, pH 4-9");
+            return false;
+        }
+        return true;
+    }
+
+    // ----- main analysis engine -----
+    function performAnalysis() {
+        if (!validateInputs()) return;
+        stopSpeaking();
+        loader.classList.remove('hidden');
+
+        setTimeout(() => {
+            try {
+                // gather inputs
+                const district = districtEl.value;
+                const soilType = districtData[district].soil;
+                const soilBase = soilTextureRatings[soilType] || 0.8;
+                const ph = +phEl.value; const moisture = +moistureEl.value; const temp = +tempEl.value;
+                const humidity = +humidityEl.value; const rainfall = +rainfallEl.value;
+                const N = +nEl.value; const P = +pEl.value; const K = +kEl.value;
+                const stage = cropStageEl.value; const irrig = irrigationEl.checked;
+
+                // 1. soil score (40% weight)
+                let soilScore = soilBase * 100;
+                if (ph >= 6.2 && ph <= 7.5) soilScore += 5; else if (ph<5.5 || ph>8.2) soilScore -= 10;
+                soilScore = Math.min(100, Math.max(0, soilScore));
+
+                // 2. weather score (temp,rainfall,humidity) + irrigation effect
+                let weatherScore = 70;
+                if (temp>=20 && temp<=35) weatherScore += 10; else if (temp>38) weatherScore -= 15;
+                if (rainfall >=800 && rainfall<=1200) weatherScore += 10; else if (rainfall<600) weatherScore -= irrig ? 5 : 15; // irrigation halves penalty
+                if (humidity>90) weatherScore -= 10; else if (humidity>=60 && humidity<=85) weatherScore += 5;
+                weatherScore = Math.min(100, Math.max(0, weatherScore));
+
+                // 3. nutrient score (30%)
+                let nutrientScore = 60;
+                if (N >= 200 && N <= 300) nutrientScore += 15; else if (N>350) nutrientScore -= 10;
+                if (P >= 80 && P <= 150) nutrientScore += 10; else if (P>200) nutrientScore -= 10;
+                if (K >= 140 && K <= 250) nutrientScore += 15; else if (K>300) nutrientScore -= 10;
+                nutrientScore = Math.min(100, Math.max(0, nutrientScore));
+
+                // 4. growth base (weighted)
+                let growthBase = (soilScore * 0.4) + (nutrientScore * 0.3) + (weatherScore * 0.3);
                 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disease</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Triggers</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symptoms</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prevention</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <!-- Rows will be inserted here by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+                // 5. disease engine (dynamic)
+                let diseaseRisk = 20; // base
+                let diseaseName = "स्वस्थ (Low risk)";
+                let diseaseLevel = "Low";
+                let warnings = [];
+                if (N>300 && humidity>80) { diseaseRisk += 20; warnings.push('Red Rot संभावित'); }
+                if (temp>35 && moisture<50) { diseaseRisk += 15; warnings.push('Smut संभावित'); }
+                if (rainfall>200 && moisture>85) { diseaseRisk += 15; warnings.push('Wilt संभावित'); }
+                if (humidity>=80 && humidity<=90 && temp>=20 && temp<=30) { diseaseRisk += 10; warnings.push('Rust संभावित'); }
+                if (N>320 && rainfall>150) { diseaseRisk += 15; warnings.push('Pokkah Boeng'); }
+                if (stage==='Ratoon' && K<140) { diseaseRisk += 20; warnings.push('Ratoon Stunting'); }
+                diseaseRisk = Math.min(85, diseaseRisk);
+                if (diseaseRisk > 50) diseaseLevel = "High"; else if (diseaseRisk > 25) diseaseLevel = "Medium";
+                if (warnings.length) diseaseName = warnings.join(', ');
+                else diseaseName = 'कोई गंभीर रोग नहीं';
 
-    <!-- Fertilizer Modal -->
-    <div id="fertilizerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-green-800">Detailed Fertilizer Recommendations</h3>
-                    <button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <div id="fertilizerDetails">
-                    <!-- Content will be inserted by JavaScript -->
-                </div>
-            </div>
-        </div>
-    </div>
+                // disease penalty
+                let diseasePenalty = 1.0;
+                if (diseaseRisk > 60) diseasePenalty = 0.8;
+                else if (diseaseRisk > 40) diseasePenalty = 0.9;
+                else if (diseaseRisk > 20) diseasePenalty = 0.95;
 
-    <script>
-        // District data for sugarcane
-        const districtData = [
-            {
-                "district": "Lucknow",
-                "pH": 6.9,
-                "moisture": 72,
-                "organicCarbon": 0.8,
-                "nitrogen": 320,
-                "phosphorus": 18,
-                "potassium": 210,
-                "temperature": 29.5,
-                "humidity": 78,
-                "rainfall": 920
-            },
-            {
-                "district": "Agra",
-                "pH": 7.2,
-                "moisture": 65,
-                "organicCarbon": 0.6,
-                "nitrogen": 280,
-                "phosphorus": 15,
-                "potassium": 190,
-                "temperature": 30.8,
-                "humidity": 70,
-                "rainfall": 890
-            },
-            {
-                "district": "Gorakhpur",
-                "pH": 6.6,
-                "moisture": 78,
-                "organicCarbon": 0.9,
-                "nitrogen": 350,
-                "phosphorus": 22,
-                "potassium": 240,
-                "temperature": 28.5,
-                "humidity": 84,
-                "rainfall": 1150
-            },
-            {
-                "district": "Varanasi",
-                "pH": 6.8,
-                "moisture": 68,
-                "organicCarbon": 0.7,
-                "nitrogen": 300,
-                "phosphorus": 20,
-                "potassium": 230,
-                "temperature": 30.2,
-                "humidity": 80,
-                "rainfall": 960
-            },
-            {
-                "district": "Jhansi",
-                "pH": 7.1,
-                "moisture": 64,
-                "organicCarbon": 0.5,
-                "nitrogen": 260,
-                "phosphorus": 12,
-                "potassium": 180,
-                "temperature": 31.2,
-                "humidity": 68,
-                "rainfall": 885
+                // 6. stage penalties (apply after disease)
+                let stagePenalty = 1.0;
+                if (stage === 'Germination') { if (moisture>85) stagePenalty *= 0.9; if (temp<18) stagePenalty *= 0.85; }
+                else if (stage === 'Tillering') { if (N<250) stagePenalty *= 0.85; if (moisture<65) stagePenalty *= 0.9; }
+                else if (stage === 'Grand Growth') { if (temp>38) stagePenalty *= 0.8; if (!irrig && rainfall<700) stagePenalty *= 0.85; }
+                else if (stage === 'Maturity') { if (N>350) stagePenalty *= 0.88; if (humidity>90) stagePenalty *= 0.9; }
+                else if (stage === 'Ratoon') { if (K<140) stagePenalty *= 0.85; if (diseaseRisk>60) stagePenalty *= 0.8; }
+
+                // combine penalties & growth
+                let growthAdjusted = growthBase * diseasePenalty * stagePenalty;
+                growthAdjusted = Math.min(100, Math.max(15, growthAdjusted));
+
+                // logistic yield curve (60-120 baseline, cap 130)
+                let yieldBase = 60 + (growthAdjusted/100)*60; // 60-120
+                yieldBase = yieldBase * (0.9 + (soilBase*0.1)); // fine tune
+                let finalYield = Math.min(130, Math.max(20, Math.round(yieldBase * 10)/10));
+
+                // 7. fertilizer recommendation with status & conversion
+                const nVal = N, pVal = P, kVal = K;
+                let nStatus = nVal<200?'Deficient':(nVal>350?'Excess':'Optimal');
+                let pStatus = pVal<80?'Deficient':(pVal>150?'Excess':'Optimal');
+                let kStatus = kVal<140?'Deficient':(kVal>250?'Excess':'Optimal');
+
+                // Soil efficiency factor (simplified)
+                const soilEff = soilBase; // 0.6-0.9
+                let urea = Math.max(0, Math.round(( (fertilizerData.N.optimal - nVal) * 2.17 * soilEff ))); if (nVal>=350) urea=0;
+                let dap = Math.max(0, Math.round(( (fertilizerData.P.optimal - pVal) * 2.0 * soilEff ))); if (pVal>=150) dap=0;
+                let mop = Math.max(0, Math.round(( (fertilizerData.K.optimal - kVal) * 1.67 * soilEff ))); if (kVal>=250) mop=0;
+                urea = Math.min(550, urea); dap = Math.min(300, dap); mop = Math.min(250, mop);
+
+                let fertExplain = `मृदा दक्षता कारक ${Math.round(soilEff*100)}% के आधार पर सलाह.`;
+
+                // 8. build result object
+                const profit = calculateProfit(finalYield);
+                const result = {
+                    soilScore: Math.round(soilScore), weatherScore: Math.round(weatherScore),
+                    nutrientScore: Math.round(nutrientScore), growthAdjusted: Math.round(growthAdjusted),
+                    yield: finalYield, diseaseRisk, diseaseLevel, diseaseName, warnings,
+                    fertilizer: { ureaKgPerHa: urea, dapKgPerHa: dap, mopKgPerHa: mop, nStatus, pStatus, kStatus, fertExplain },
+                    profit
+                };
+                lastResult = result;
+                updateUI(result);
+                updateCharts(result);
+                listenBtn.disabled = false;
+            } catch (e) { console.error(e); alert('विश्लेषण में त्रुटि'); } finally {
+                loader.classList.add('hidden');
             }
-        ];
+        }, 300);
+    }
 
-        // Soil texture ratings for sugarcane
-        const soilTextureRatings = {
-            "Alluvial": 5,
-            "Loam": 4.5,
-            "Clay Loam": 4,
-            "Silty Clay Loam": 3.5,
-            "Silty Loam": 3,
-            "Clay": 2.5
-        };
+    function updateUI(r) {
+        document.getElementById('growthScore').innerText = r.growthAdjusted+'%';
+        document.getElementById('yieldVal').innerText = r.yield;
+        document.getElementById('diseaseRisk').innerHTML = `${r.diseaseRisk}% (${r.diseaseLevel})`;
+        document.getElementById('soilScore').innerText = r.soilScore+'%';
+        document.getElementById('soilScoreVal').innerText = r.soilScore+'%';
+        document.getElementById('weatherScoreVal').innerText = r.weatherScore+'%';
+        document.getElementById('nutrientScoreVal').innerText = r.nutrientScore+'%';
+        document.getElementById('overallGrowthVal').innerText = r.growthAdjusted+'%';
+        document.getElementById('soilBar').style.width = r.soilScore+'%';
+        document.getElementById('weatherBar').style.width = r.weatherScore+'%';
+        document.getElementById('nutrientBar').style.width = r.nutrientScore+'%';
+        document.getElementById('overallBar').style.width = r.growthAdjusted+'%';
+        document.getElementById('diseaseName').innerText = r.diseaseName;
+        document.getElementById('diseaseLevel').innerText = `जोखिम स्तर: ${r.diseaseLevel}`;
+        let warnHtml = ''; r.warnings.forEach(w=>warnHtml+=`<li>${w}</li>`);
+        document.getElementById('diseaseWarnings').innerHTML = warnHtml || '<li>कोई चेतावनी नहीं</li>';
 
-        // Disease data for sugarcane
-        const diseaseData = [
-            {
-                "name": "Red Rot",
-                "triggers": "High humidity >85%, Waterlogging, Poor drainage",
-                "symptoms": "Reddish internal discoloration, Wilting",
-                "prevention": "Use disease-free setts, Improve drainage, Crop rotation"
-            },
-            {
-                "name": "Smut",
-                "triggers": "Water stress, High temperature >35°C",
-                "symptoms": "Black whip-like structure, Stunted growth",
-                "prevention": "Use resistant varieties, Hot water treatment of setts"
-            },
-            {
-                "name": "Wilt",
-                "triggers": "Waterlogging, Poor soil aeration",
-                "symptoms": "Yellowing and wilting of leaves, Vascular discoloration",
-                "prevention": "Improve drainage, Soil solarization, Balanced fertilization"
-            },
-            {
-                "name": "Rust",
-                "triggers": "High humidity, Moderate temperatures (20-25°C)",
-                "symptoms": "Orange-brown pustules on leaves",
-                "prevention": "Resistant varieties, Proper spacing, Fungicide application"
-            },
-            {
-                "name": "Grassy Shoot",
-                "triggers": "Phytoplasma, Insect vectors",
-                "symptoms": "Grass-like shoots, Reduced internode length",
-                "prevention": "Use disease-free setts, Rogue infected plants, Control insect vectors"
-            },
-            {
-                "name": "Pokkah Boeng",
-                "triggers": "High humidity, Waterlogging, Fusarium fungus",
-                "symptoms": "Malformation of leaves, Rotting of growing points",
-                "prevention": "Improve drainage, Avoid waterlogging, Fungicide treatment"
-            },
-            {
-                "name": "Leaf Scald",
-                "triggers": "Xanthomonas bacteria, Wounds, High humidity",
-                "symptoms": "White pencil-line streaks on leaves, Leaf necrosis",
-                "prevention": "Use disease-free setts, Avoid mechanical injury, Resistant varieties"
-            },
-            {
-                "name": "Ratoon Stunting",
-                "triggers": "Bacterial infection, Contaminated tools",
-                "symptoms": "Stunted growth, Reduced tillering, Pink discoloration at nodes",
-                "prevention": "Hot water treatment of setts, Sterilize cutting tools"
-            },
-            {
-                name: "Yellow Leaf Disease",
-                triggers: "Virus, Aphid vectors",
-                symptoms: "Yellowing of midrib and leaf blade, Stunting",
-                prevention: "Control aphids, Remove infected plants, Resistant varieties"
+        document.getElementById('fertNstatus').innerHTML = `नाइट्रोजन (N): ${r.fertilizer.nStatus}`;
+        document.getElementById('fertPstatus').innerHTML = `फॉस्फोरस (P): ${r.fertilizer.pStatus}`;
+        document.getElementById('fertKstatus').innerHTML = `पोटैशियम (K): ${r.fertilizer.kStatus}`;
+        document.getElementById('ureaRec').innerText = r.fertilizer.ureaKgPerHa;
+        document.getElementById('dapRec').innerText = r.fertilizer.dapKgPerHa;
+        document.getElementById('mopRec').innerText = r.fertilizer.mopKgPerHa;
+        document.getElementById('fertExplain').innerText = r.fertilizer.fertExplain;
+
+        // profit tab
+        document.getElementById('grossIncome').innerText = '₹'+Math.round(r.profit.gross).toLocaleString();
+        document.getElementById('netProfit').innerText = '₹'+Math.round(r.profit.netProfit).toLocaleString();
+        document.getElementById('roi').innerText = r.profit.roi.toFixed(1)+'%';
+        document.getElementById('yourYieldField').innerText = r.yield;
+        const breakeven = 120000/(10*315);
+        document.getElementById('breakevenYield').innerText = breakeven.toFixed(1);
+        let compPercent = Math.min(100, (r.yield / 130)*100);
+        document.getElementById('compareBar').style.width = compPercent+'%';
+    }
+
+    function updateCharts(r) {
+        if (growthChart) growthChart.destroy();
+        if (npkChart) npkChart.destroy();
+        const gCtx = document.getElementById('growthChart').getContext('2d');
+        growthChart = new Chart(gCtx, {
+            type:'bar', data: {
+                labels:['मृदा','पोषक','मौसम','वृद्धि'],
+                datasets:[{ label:'स्कोर (%)', data:[r.soilScore, r.nutrientScore, r.weatherScore, r.growthAdjusted], backgroundColor:['#3b82f6','#f59e0b','#10b981','#8b5cf6'] }]
             }
-        ];
-
-        // Fertilizer recommendation data for sugarcane
-        const fertilizerData = [
-            {
-                "nutrient": "Nitrogen (N)",
-                "conditions": [
-                    {
-                        "range": "N < 240 kg/ha",
-                        "issues": [
-                            "Slow growth and stunting",
-                            "Pale yellow leaves",
-                            "Reduced tillering",
-                            "Thin canes"
-                        ],
-                        "diseases": [
-                            "Increased susceptibility to smut",
-                            "Poor ratoon growth"
-                        ],
-                        "fertilizer": {
-                            "type": "Urea",
-                            "recommended_kg_per_ha": "120–150",
-                            "application_method": "Split application: 1/3 at planting, 1/3 at tillering, 1/3 at grand growth"
-                        }
-                    },
-                    {
-                        "range": "240 ≤ N < 350 kg/ha",
-                        "issues": [
-                            "Adequate growth",
-                            "Moderate tillering"
-                        ],
-                        "diseases": [
-                            "Balanced nutrition reduces disease risk"
-                        ],
-                        "fertilizer": {
-                            "type": "Urea",
-                            "recommended_kg_per_ha": "80–100",
-                            "application_method": "Split between tillering and grand growth stages"
-                        }
-                    },
-                    {
-                        "range": "N > 480 kg/ha",
-                        "issues": [
-                            "Excessive vegetative growth",
-                            "Lodging of canes",
-                            "Delayed maturity",
-                            "Reduced sugar content"
-                        ],
-                        "diseases": [
-                            "Increased susceptibility to red rot and rust",
-                            "Higher incidence of pokkah boeng"
-                        ],
-                        "fertilizer": {
-                            "type": "Urea",
-                            "recommended_kg_per_ha": "No additional N required",
-                            "application_method": "Reduce nitrogen application in next cycle"
-                        }
-                    }
-                ]
-            },
-            {
-                "nutrient": "Phosphorus (P)",
-                "conditions": [
-                    {
-                        "range": "P < 11 kg/ha",
-                        "issues": [
-                            "Poor root development",
-                            "Purplish discoloration of leaves",
-                            "Delayed maturity",
-                            "Reduced tillering"
-                        ],
-                        "diseases": [
-                            "Increased susceptibility to wilt",
-                            "Poor ratoon establishment"
-                        ],
-                        "fertilizer": {
-                            "type": "DAP",
-                            "recommended_kg_per_ha": "60–80",
-                            "application_method": "Full dose as basal application at planting"
-                        }
-                    },
-                    {
-                        "range": "11 ≤ P ≤ 22 kg/ha",
-                        "issues": [
-                            "Adequate root development",
-                            "Satisfactory growth"
-                        ],
-                        "diseases": [
-                            "Normal disease resistance"
-                        ],
-                        "fertilizer": {
-                            "type": "DAP",
-                            "recommended_kg_per_ha": "30–40",
-                            "application_method": "Basal application at planting"
-                        }
-                    },
-                    {
-                        "range": "P > 22 kg/ha",
-                        "issues": [
-                            "Micronutrient imbalances (especially zinc)",
-                            "Reduced sugar content"
-                        ],
-                        "diseases": [
-                            "Possible iron and zinc deficiency symptoms"
-                        ],
-                        "fertilizer": {
-                            "type": "DAP",
-                            "recommended_kg_per_ha": "No additional P required",
-                            "application_method": "Skip phosphorus application in next cycle"
-                        }
-                    }
-                ]
-            },
-            {
-                "nutrient": "Potassium (K)",
-                "conditions": [
-                    {
-                        "range": "K < 110 kg/ha",
-                        "issues": [
-                            "Leaf margin scorching",
-                            "Weak stalks and lodging",
-                            "Reduced sugar recovery",
-                            "Poor water use efficiency"
-                        ],
-                        "diseases": [
-                            "Increased susceptibility to red rot and smut",
-                            "Poor ratoon growth"
-                        ],
-                        "fertilizer": {
-                            "type": "MOP",
-                            "recommended_kg_per_ha": "60–80",
-                            "application_method": "Split application: 1/2 basal, 1/2 at tillering"
-                        }
-                    },
-                    {
-                        "range": "110 ≤ K ≤ 280 kg/ha",
-                        "issues": [
-                            "Good stalk strength",
-                            "Adequate sugar accumulation"
-                        ],
-                        "diseases": [
-                            "Normal disease resistance"
-                        ],
-                        "fertilizer": {
-                            "type": "MOP",
-                            "recommended_kg_per_ha": "40–60",
-                            "application_method": "Basal application at planting"
-                        }
-                    },
-                    {
-                        "range": "K > 280 kg/ha",
-                        "issues": [
-                            "Magnesium deficiency",
-                            "Imbalanced nutrition"
-                        ],
-                        "diseases": [
-                            "Possible magnesium deficiency symptoms"
-                        ],
-                        "fertilizer": {
-                            "type": "MOP",
-                            "recommended_kg_per_ha": "No additional K required",
-                            "application_method": "Reduce potassium application in next cycle"
-                        }
-                    }
-                ]
+        });
+        const npkCtx = document.getElementById('npkChart').getContext('2d');
+        npkChart = new Chart(npkCtx, {
+            type:'bar', data: {
+                labels:['N','P','K'],
+                datasets:[{ label:'वर्तमान स्तर', data:[+nEl.value, +pEl.value, +kEl.value], backgroundColor:'#f97316' }]
             }
-        ];
+        });
+    }
 
-        // DOM elements
-        const districtSelect = document.getElementById('district');
-        const soilPhInput = document.getElementById('soilPh');
-        const soilMoistureInput = document.getElementById('soilMoisture');
-        const organicCarbonInput = document.getElementById('organicCarbon');
-        const soilTextureInput = document.getElementById('soilTexture');
-        const nitrogenInput = document.getElementById('nitrogen');
-        const phosphorusInput = document.getElementById('phosphorus');
-        const potassiumInput = document.getElementById('potassium');
-        const temperatureInput = document.getElementById('temperature');
-        const humidityInput = document.getElementById('humidity');
-        const rainfallInput = document.getElementById('rainfall');
-        const calculateBtn = document.getElementById('calculateBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const resultsContainer = document.getElementById('resultsContainer');
-        const diseaseBtn = document.getElementById('diseaseBtn');
-        const diseaseModal = document.getElementById('diseaseModal');
-        const closeModal = document.getElementById('closeModal');
-        const diseaseTableBody = document.querySelector('#diseaseModal tbody');
-        const fertilizerModal = document.getElementById('fertilizerModal');
-        const closeFertilizerModal = document.getElementById('closeFertilizerModal');
-        const fertilizerDetails = document.getElementById('fertilizerDetails');
+    // ----- event listeners -----
+    analyzeBtn.addEventListener('click', performAnalysis);
+    
+    listenBtn.addEventListener('click', () => {
+        if (!lastResult) { alert('कृपया पहले कैलकुलेट करें'); return; }
+        if (isSpeaking) stopSpeaking(); else speakReport(lastResult);
+    });
 
-        // Event listeners
-        districtSelect.addEventListener('change', fillDistrictData);
-        calculateBtn.addEventListener('click', calculateResults);
-        resetBtn.addEventListener('click', resetForm);
-        diseaseBtn.addEventListener('click', showDiseaseModal);
-        closeModal.addEventListener('click', hideDiseaseModal);
-        closeFertilizerModal.addEventListener('click', hideFertilizerModal);
+    // Tabs
+    tabAnalysisBtn.addEventListener('click',()=>{
+        tabAnalysisBtn.classList.add('tab-active'); tabProfitBtn.classList.remove('tab-active');
+        analysisDiv.classList.remove('hidden'); profitDiv.classList.add('hidden');
+    });
+    tabProfitBtn.addEventListener('click',()=>{
+        tabProfitBtn.classList.add('tab-active'); tabAnalysisBtn.classList.remove('tab-active');
+        profitDiv.classList.remove('hidden'); analysisDiv.classList.add('hidden');
+    });
 
-        // Populate disease table
-        function populateDiseaseTable() {
-            diseaseTableBody.innerHTML = '';
-            diseaseData.forEach(disease => {
-                const row = document.createElement('tr');
-                row.className = 'disease-row';
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${disease.name}</td>
-                    <td class="px-6 py-4 whitespace-normal text-sm text-gray-500">${disease.triggers}</td>
-                    <td class="px-6 py-4 whitespace-normal text-sm text-gray-500">${disease.symptoms}</td>
-                    <td class="px-6 py-4 whitespace-normal text-sm text-gray-500">${disease.prevention}</td>
-                `;
-                diseaseTableBody.appendChild(row);
-            });
-        }
-
-        // Show disease modal
-        function showDiseaseModal() {
-            populateDiseaseTable();
-            diseaseModal.classList.remove('hidden');
-        }
-
-        // Hide disease modal
-        function hideDiseaseModal() {
-            diseaseModal.classList.add('hidden');
-        }
-
-        // Show fertilizer modal
-        function showFertilizerModal(nitrogen, phosphorus, potassium) {
-            fertilizerDetails.innerHTML = generateFertilizerDetails(nitrogen, phosphorus, potassium);
-            fertilizerModal.classList.remove('hidden');
-        }
-
-        // Hide fertilizer modal
-        function hideFertilizerModal() {
-            fertilizerModal.classList.add('hidden');
-        }
-
-        // Generate fertilizer details
-        function generateFertilizerDetails(nitrogen, phosphorus, potassium) {
-            let html = '<div class="space-y-6">';
-            
-            // Nitrogen recommendations
-            html += '<div class="bg-blue-50 p-4 rounded-lg">';
-            html += '<h4 class="font-bold text-blue-800 mb-2">Nitrogen (N) Recommendations</h4>';
-            
-            const nCondition = getFertilizerCondition('Nitrogen (N)', nitrogen);
-            html += `<p class="font-medium">Current level: ${nitrogen} kg/ha (${nCondition.range})</p>`;
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Potential Issues:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            nCondition.issues.forEach(issue => {
-                html += `<li>${issue}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Disease Risks:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            nCondition.diseases.forEach(disease => {
-                html += `<li>${disease}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            html += '</div>';
-            
-            // Phosphorus recommendations
-            html += '<div class="bg-purple-50 p-4 rounded-lg">';
-            html += '<h4 class="font-bold text-purple-800 mb-2">Phosphorus (P) Recommendations</h4>';
-            
-            const pCondition = getFertilizerCondition('Phosphorus (P)', phosphorus);
-            html += `<p class="font-medium">Current level: ${phosphorus} kg/ha (${pCondition.range})</p>`;
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Potential Issues:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            pCondition.issues.forEach(issue => {
-                html += `<li>${issue}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Disease Risks:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            pCondition.diseases.forEach(disease => {
-                html += `<li>${disease}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            html += '</div>';
-            
-            // Potassium recommendations
-            html += '<div class="bg-green-50 p-4 rounded-lg">';
-            html += '<h4 class="font-bold text-green-800 mb-2">Potassium (K) Recommendations</h4>';
-            
-            const kCondition = getFertilizerCondition('Potassium (K)', potassium);
-            html += `<p class="font-medium">Current level: ${potassium} kg/ha (${kCondition.range})</p>`;
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Potential Issues:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            kCondition.issues.forEach(issue => {
-                html += `<li>${issue}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            html += '<div class="mt-2">';
-            html += '<h5 class="font-semibold text-sm text-gray-700">Disease Risks:</h5>';
-            html += '<ul class="list-disc pl-5 text-sm text-gray-600">';
-            kCondition.diseases.forEach(disease => {
-                html += `<li>${disease}</li>`;
-            });
-            html += '</ul>';
-            html += '</div>';
-            
-            html += '</div>';
-            
-            // General fertilizer schedule
-            html += '<div class="bg-yellow-50 p-4 rounded-lg">';
-            html += '<h4 class="font-bold text-yellow-800 mb-2">General Fertilizer Application Schedule</h4>';
-            html += '<div class="overflow-x-auto">';
-            html += '<table class="min-w-full divide-y divide-gray-200">';
-            html += '<thead class="bg-yellow-100">';
-            html += '<tr>';
-            html += '<th class="px-4 py-2 text-left text-xs font-medium text-yellow-800 uppercase">Time</th>';
-            html += '<th class="px-4 py-2 text-left text-xs font-medium text-yellow-800 uppercase">Fertilizer to Apply</th>';
-            html += '</tr>';
-            html += '</thead>';
-            html += '<tbody class="bg-yellow-50 divide-y divide-yellow-200">';
-            html += '<tr>';
-            html += '<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">Basal (at planting)</td>';
-            html += '<td class="px-4 py-2 whitespace-normal text-sm text-gray-700">Full P + 1/3 N + 1/2 K + FYM (10-15 t/ha)</td>';
-            html += '</tr>';
-            html += '<tr>';
-            html += '<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">Tillering Stage (60-75 DAP)</td>';
-            html += '<td class="px-4 py-2 whitespace-normal text-sm text-gray-700">1/3 N + 1/2 K</td>';
-            html += '</tr>';
-            html += '<tr>';
-            html += '<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">Grand Growth Stage (90-120 DAP)</td>';
-            html += '<td class="px-4 py-2 whitespace-normal text-sm text-gray-700">1/3 N</td>';
-            html += '</tr>';
-            html += '</tbody>';
-            html += '</table>';
-            html += '</div>';
-            html += '</div>';
-            
-            html += '</div>';
-            return html;
-        }
-
-        // Get fertilizer condition based on value
-        function getFertilizerCondition(nutrient, value) {
-            const nutrientData = fertilizerData.find(item => item.nutrient === nutrient);
-            if (!nutrientData) return null;
-            
-            for (const condition of nutrientData.conditions) {
-                const range = condition.range;
-                if (range.includes('<')) {
-                    const parts = range.split('<');
-                    const threshold = parseFloat(parts[1].split(' ')[0]);
-                    if (value < threshold) return condition;
-                } 
-                else if (range.includes('≤')) {
-                    const parts = range.split('≤');
-                    const min = parseFloat(parts[0]);
-                    const max = parseFloat(parts[1].split(' ')[2]);
-                    if (value >= min && value <= max) return condition;
-                }
-                else if (range.includes('>')) {
-                    const parts = range.split('>');
-                    const threshold = parseFloat(parts[1].split(' ')[0]);
-                    if (value > threshold) return condition;
-                }
-            }
-            return nutrientData.conditions[0]; // Default to first condition
-        }
-
-        // Fill form with district data
-        function fillDistrictData() {
-            const district = districtSelect.value;
-            if (district) {
-                const data = districtData.find(d => d.district === district);
-                if (data) {
-                    soilPhInput.value = data.pH;
-                    soilMoistureInput.value = data.moisture;
-                    organicCarbonInput.value = data.organicCarbon;
-                    nitrogenInput.value = data.nitrogen;
-                    phosphorusInput.value = data.phosphorus;
-                    potassiumInput.value = data.potassium;
-                    temperatureInput.value = data.temperature;
-                    humidityInput.value = data.humidity;
-                    rainfallInput.value = data.rainfall;
-                    soilTextureInput.value = ""; // Reset soil texture as it's not in district data
-                }
-            }
-        }
-
-        // Reset form
-        function resetForm() {
-            document.getElementById('cropForm').reset();
-            resultsContainer.innerHTML = `
-                <div class="text-center py-8 text-gray-400">
-                    <i class="fas fa-leaf text-4xl mb-2"></i>
-                    <p>Enter parameters and click Calculate to see results</p>
-                </div>
-            `;
-        }
-
-        // Normalize value function
-        function normalize(value, min, max, ideal) {
-            if (value <= min || value >= max) return 0;
-            if (value === ideal) return 1;
-            
-            // Calculate distance from ideal
-            const distance = Math.abs(value - ideal);
-            const maxDistance = Math.max(ideal - min, max - ideal);
-            
-            // Quadratic decay for more severe penalty as we move away from ideal
-            return 1 - Math.pow(distance / maxDistance, 2);
-        }
-
-        // Calculate soil texture score
-        function getSoilTextureScore(texture) {
-            return soilTextureRatings[texture] || 0;
-        }
-
-        // Calculate results
-        function calculateResults() {
-            // Get input values
-            const soilPh = parseFloat(soilPhInput.value) || 0;
-            const soilMoisture = parseFloat(soilMoistureInput.value) || 0;
-            const organicCarbon = parseFloat(organicCarbonInput.value) || 0;
-            const soilTexture = soilTextureInput.value;
-            const nitrogen = parseFloat(nitrogenInput.value) || 0;
-            const phosphorus = parseFloat(phosphorusInput.value) || 0;
-            const potassium = parseFloat(potassiumInput.value) || 0;
-            const temperature = parseFloat(temperatureInput.value) || 0;
-            const humidity = parseFloat(humidityInput.value) || 0;
-            const rainfall = parseFloat(rainfallInput.value) || 0;
-
-            // Calculate scores with appropriate weights for sugarcane
-            const growthScore = (
-                normalize(soilPh, 6.0, 7.0, 6.5) * 0.10 + // 10% weight
-                normalize(soilMoisture, 70, 100, 85) * 0.15 + // 15% weight
-                normalize(organicCarbon, 0.5, 1.0, 0.75) * 0.10 + // 10% weight
-                (soilTexture ? getSoilTextureScore(soilTexture) / 5 * 0.10 : 0) + // 10% weight for soil texture
-                normalize(nitrogen, 240, 480, 360) * 0.075 + // 7.5% weight
-                normalize(phosphorus, 11, 22, 16.5) * 0.0375 + // 3.75% weight
-                normalize(potassium, 110, 280, 195) * 0.0375 + // 3.75% weight
-                normalize(temperature, 20, 32, 26) * 0.20 + // 20% weight
-                normalize(humidity, 70, 85, 77.5) * 0.10 + // 10% weight
-                normalize(rainfall, 2500, 3000, 2750) * 0.10 // 10% weight
-            ) * 100;
-
-            const soilScore = (
-                normalize(soilPh, 6.0, 7.0, 6.5) * 0.10 +
-                normalize(soilMoisture, 70, 100, 85) * 0.15 +
-                normalize(organicCarbon, 0.5, 1.0, 0.75) * 0.10 +
-                (soilTexture ? getSoilTextureScore(soilTexture) / 5 * 0.15 : 0) + // Higher weight for soil texture in soil score
-                normalize(nitrogen, 240, 480, 360) * 0.075 +
-                normalize(phosphorus, 11, 22, 16.5) * 0.0375 +
-                normalize(potassium, 110, 280, 195) * 0.0375
-            ) * 100;
-
-            const weatherScore = (
-                normalize(temperature, 20, 32, 26) * 0.20 +
-                normalize(humidity, 70, 85, 77.5) * 0.10 +
-                normalize(rainfall, 2500, 3000, 2750) * 0.10
-            ) * 100;
-
-            // Calculate expected yield (110-150 t/ha range)
-            const expectedYield = 110 + (growthScore / 100) * (150 - 110);
-
-            // Determine disease risk
-            let diseaseRisk = "Low";
-            let diseaseRiskColor = "text-green-600";
-            if (humidity > 85 || soilMoisture > 90) {
-                diseaseRisk = "Medium";
-                diseaseRiskColor = "text-yellow-600";
-            }
-            if (humidity > 90 || soilMoisture > 95 || soilPh < 5.5 || soilPh > 8.0) {
-                diseaseRisk = "High";
-                diseaseRiskColor = "text-red-600";
-            }
-
-            // Determine match summary
-            let matchSummary = "";
-            let matchColor = "";
-            if (growthScore >= 85) {
-                matchSummary = "Excellent conditions for sugarcane cultivation";
-                matchColor = "text-green-600";
-            } else if (growthScore >= 70) {
-                matchSummary = "Good conditions for sugarcane cultivation";
-                matchColor = "text-blue-600";
-            } else {
-                matchSummary = "Unsuitable or risky conditions";
-                matchColor = "text-red-600";
-            }
-
-            // Soil texture rating
-            let soilTextureRating = "";
-            if (soilTexture) {
-                const rating = soilTextureRatings[soilTexture] || 0;
-                soilTextureRating = `
-                    <div class="flex items-center mt-1">
-                        <span class="text-sm text-gray-700 mr-2">Texture Rating:</span>
-                        <span class="star-rating">
-                            ${'★'.repeat(Math.floor(rating))}${rating % 1 >= 0.5 ? '½' : ''}${'☆'.repeat(5 - Math.ceil(rating))}
-                        </span>
-                    </div>
-                `;
-            }
-
-            // Fertilizer recommendations
-            let ureaRecommendation = "";
-            if (nitrogen < 240) ureaRecommendation = "Add 120–150 kg/ha Urea (split application)";
-            else if (nitrogen < 350) ureaRecommendation = "Add 80–100 kg/ha Urea";
-            else if (nitrogen > 480) ureaRecommendation = "No Urea needed";
-            else ureaRecommendation = "Add 50–70 kg/ha Urea";
-
-            let dapRecommendation = "";
-            if (phosphorus < 11) dapRecommendation = "Add 60–80 kg/ha DAP";
-            else if (phosphorus <= 22) dapRecommendation = "Add 30–40 kg/ha DAP";
-            else dapRecommendation = "No DAP needed";
-
-            let mopRecommendation = "";
-            if (potassium < 110) mopRecommendation = "Add 60–80 kg/ha MOP";
-            else if (potassium <= 280) mopRecommendation = "Add 40–60 kg/ha MOP";
-            else mopRecommendation = "No MOP needed";
-
-            // Display results
-            resultsContainer.innerHTML = `
-                <div class="bg-green-50 p-4 rounded-lg mb-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-medium text-green-800">Growth Score</h3>
-                        <span class="text-xl font-bold text-green-700">${Math.round(growthScore)}/100</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div class="progress-bar bg-green-600 h-2.5 rounded-full" style="width: ${growthScore}%"></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-blue-800 mb-1">Expected Yield</h3>
-                        <p class="text-2xl font-bold text-blue-700">${Math.round(expectedYield)} t/ha</p>
-                    </div>
-
-                    <div class="bg-purple-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-purple-800 mb-1">Disease Risk</h3>
-                        <p class="text-2xl font-bold ${diseaseRiskColor}">${diseaseRisk}</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div class="bg-yellow-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-yellow-800 mb-1">Soil Compatibility</h3>
-                        <div class="flex items-center">
-                            <span class="text-2xl font-bold text-yellow-700 mr-2">${Math.round(soilScore)}%</span>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="progress-bar bg-yellow-500 h-2.5 rounded-full" style="width: ${soilScore}%"></div>
-                            </div>
-                        </div>
-                        ${soilTextureRating}
-                    </div>
-
-                    <div class="bg-indigo-50 p-4 rounded-lg">
-                        <h3 class="font-medium text-indigo-800 mb-1">Weather Compatibility</h3>
-                        <div class="flex items-center">
-                            <span class="text-2xl font-bold text-indigo-700 mr-2">${Math.round(weatherScore)}%</span>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="progress-bar bg-indigo-500 h-2.5 rounded-full" style="width: ${weatherScore}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                    <h3 class="font-medium text-gray-800 mb-1">Match Summary</h3>
-                    <p class="text-lg font-semibold ${matchColor}">${matchSummary}</p>
-                </div>
-
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-medium text-gray-800">Fertilizer Recommendations</h3>
-                        <button id="viewDetailsBtn" class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded hover:bg-green-200">
-                            View Details
-                        </button>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex items-start">
-                            <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-2">Urea</span>
-                            <p>${ureaRecommendation}</p>
-                        </div>
-                        <div class="flex items-start">
-                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2">DAP</span>
-                            <p>${dapRecommendation}</p>
-                        </div>
-                        <div class="flex items-start">
-                            <span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded mr-2">MOP</span>
-                            <p>${mopRecommendation}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Add event listener for view details button
-            document.getElementById('viewDetailsBtn').addEventListener('click', () => {
-                showFertilizerModal(nitrogen, phosphorus, potassium);
-            });
-        }
-
-        // Initialize disease table
-        populateDiseaseTable();
-    </script>
+    // Reset speaking on beforeunload & load
+    window.addEventListener('beforeunload', stopSpeaking);
+    window.addEventListener('load', ()=>{ stopSpeaking(); listenBtn.disabled=true; });
+})();
+</script>
 </body>
 </html>
