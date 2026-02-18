@@ -72,8 +72,6 @@
                 <label class="flex items-center gap-2"><input type="checkbox" id="irrigation" class="w-4 h-4"> <span>🚜 सिंचाई उपलब्ध (Irrigation)</span></label>
                 <button id="analyzeBtn" class="ml-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full shadow-md transition"><i class="fas fa-calculator"></i> गणना करें</button>
             </div>
-
-            <!-- voice button inside analysis section (top right) will be placed via js later but we add it static for simplicity, but we also put it in analysis tab -->
         </div>
 
         <!-- RIGHT PANEL: TABS + OUTPUT -->
@@ -109,6 +107,13 @@
                     <div><div class="flex justify-between text-sm"><strong>📈 समग्र वृद्धि</strong><strong id="overallGrowthVal">0%</strong></div><div class="progress-bar"><div id="overallBar" class="progress-fill" style="width:0%"></div></div></div>
                 </div>
 
+                <!-- Sensitivity Impact Row (new) -->
+                <div class="grid grid-cols-3 gap-2 text-xs text-center font-medium">
+                    <div class="bg-blue-100 p-2 rounded">🌱 मृदा प्रभाव: <span id="sensSoil">0</span>%</div>
+                    <div class="bg-amber-100 p-2 rounded">🧪 पोषक प्रभाव: <span id="sensNutrient">0</span>%</div>
+                    <div class="bg-emerald-100 p-2 rounded">🌤️ मौसम प्रभाव: <span id="sensWeather">0</span>%</div>
+                </div>
+
                 <!-- CHARTS ROW -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                     <div><canvas id="growthChart" height="180"></canvas></div>
@@ -135,7 +140,7 @@
                     </div>
                 </div>
 
-                <!-- Sensitivity info / penalties -->
+                <!-- Penalty info -->
                 <div class="text-xs text-gray-500 border-t pt-2" id="penaltyInfo"></div>
             </div>
 
@@ -233,7 +238,7 @@
         } catch (e) { console.error(e); }
     }
 
-    // ----- speak report (exactly as advanced rice logic) -----
+    // ----- speak report -----
     function speakReport(data) {
         try {
             if (window.speechSynthesis) window.speechSynthesis.cancel();
@@ -280,10 +285,17 @@
         return true;
     }
 
-    // ----- main analysis engine -----
+    // Gaussian normalization
+    function gaussian(value, min, max, ideal) {
+        const sigma = (max - min) / 4;
+        const diff = value - ideal;
+        return Math.exp(-(diff * diff) / (2 * sigma * sigma));
+    }
+
+    // ----- main analysis engine (FIXED & ENHANCED) -----
     function performAnalysis() {
         if (!validateInputs()) return;
-        stopSpeaking();
+        stopSpeaking();  // ensure speech stops
         loader.classList.remove('hidden');
 
         setTimeout(() => {
@@ -302,35 +314,47 @@
                 if (ph >= 6.2 && ph <= 7.5) soilScore += 5; else if (ph<5.5 || ph>8.2) soilScore -= 10;
                 soilScore = Math.min(100, Math.max(0, soilScore));
 
-                // 2. weather score (temp,rainfall,humidity) + irrigation effect
+                // 2. weather score with fixed rainfall thresholds
                 let weatherScore = 70;
                 if (temp>=20 && temp<=35) weatherScore += 10; else if (temp>38) weatherScore -= 15;
-                if (rainfall >=800 && rainfall<=1200) weatherScore += 10; else if (rainfall<600) weatherScore -= irrig ? 5 : 15; // irrigation halves penalty
+                // rainfall penalty (UP specific)
+                if (rainfall < 700) {
+                    weatherScore -= irrig ? 7 : 15;   // irrigation reduces penalty by ~50%
+                } else if (rainfall > 1200) {
+                    weatherScore -= 8;  // excess rain penalty
+                } else {
+                    weatherScore += 5;
+                }
                 if (humidity>90) weatherScore -= 10; else if (humidity>=60 && humidity<=85) weatherScore += 5;
                 weatherScore = Math.min(100, Math.max(0, weatherScore));
 
-                // 3. nutrient score (30%)
-                let nutrientScore = 60;
-                if (N >= 200 && N <= 300) nutrientScore += 15; else if (N>350) nutrientScore -= 10;
-                if (P >= 80 && P <= 150) nutrientScore += 10; else if (P>200) nutrientScore -= 10;
-                if (K >= 140 && K <= 250) nutrientScore += 15; else if (K>300) nutrientScore -= 10;
+                // 3. nutrient score using gaussian (FIXED)
+                const Nscore = gaussian(N, 150, 400, 280);
+                const Pscore = gaussian(P, 60, 200, 120);
+                const Kscore = gaussian(K, 100, 300, 180);
+                let nutrientScore = (Nscore * 0.4 + Pscore * 0.3 + Kscore * 0.3) * 100;
                 nutrientScore = Math.min(100, Math.max(0, nutrientScore));
 
                 // 4. growth base (weighted)
                 let growthBase = (soilScore * 0.4) + (nutrientScore * 0.3) + (weatherScore * 0.3);
                 
-                // 5. disease engine (dynamic)
+                // 5. disease engine (dynamic) – FIXED thresholds
                 let diseaseRisk = 20; // base
                 let diseaseName = "स्वस्थ (Low risk)";
                 let diseaseLevel = "Low";
                 let warnings = [];
-                if (N>300 && humidity>80) { diseaseRisk += 20; warnings.push('Red Rot संभावित'); }
+                if (N>320 && humidity>85) { diseaseRisk += 25; warnings.push('Red Rot High Risk'); }
+                else if (N>300 && humidity>80) { diseaseRisk += 15; warnings.push('Red Rot संभावित'); }
                 if (temp>35 && moisture<50) { diseaseRisk += 15; warnings.push('Smut संभावित'); }
-                if (rainfall>200 && moisture>85) { diseaseRisk += 15; warnings.push('Wilt संभावित'); }
+                // fixed waterlogging: rainfall > 1200 OR moisture>90
+                if (rainfall > 1200 && moisture > 85) { diseaseRisk += 20; warnings.push('Wilt संभावित'); }
+                if (moisture > 90) { diseaseRisk += 15; warnings.push('Waterlogging Wilt'); }
                 if (humidity>=80 && humidity<=90 && temp>=20 && temp<=30) { diseaseRisk += 10; warnings.push('Rust संभावित'); }
                 if (N>320 && rainfall>150) { diseaseRisk += 15; warnings.push('Pokkah Boeng'); }
                 if (stage==='Ratoon' && K<140) { diseaseRisk += 20; warnings.push('Ratoon Stunting'); }
-                diseaseRisk = Math.min(85, diseaseRisk);
+                if (stage==='Ratoon' && diseaseRisk>60) warnings.push('Ratoon में उच्च जोखिम');
+                
+                diseaseRisk = Math.min(90, diseaseRisk); // capped at 90%
                 if (diseaseRisk > 50) diseaseLevel = "High"; else if (diseaseRisk > 25) diseaseLevel = "Medium";
                 if (warnings.length) diseaseName = warnings.join(', ');
                 else diseaseName = 'कोई गंभीर रोग नहीं';
@@ -349,43 +373,67 @@
                 else if (stage === 'Maturity') { if (N>350) stagePenalty *= 0.88; if (humidity>90) stagePenalty *= 0.9; }
                 else if (stage === 'Ratoon') { if (K<140) stagePenalty *= 0.85; if (diseaseRisk>60) stagePenalty *= 0.8; }
 
-                // combine penalties & growth
+                // combine penalties & growth (floor now 5)
                 let growthAdjusted = growthBase * diseasePenalty * stagePenalty;
-                growthAdjusted = Math.min(100, Math.max(15, growthAdjusted));
+                growthAdjusted = Math.min(100, Math.max(5, growthAdjusted));
 
                 // logistic yield curve (60-120 baseline, cap 130)
                 let yieldBase = 60 + (growthAdjusted/100)*60; // 60-120
                 yieldBase = yieldBase * (0.9 + (soilBase*0.1)); // fine tune
                 let finalYield = Math.min(130, Math.max(20, Math.round(yieldBase * 10)/10));
 
-                // 7. fertilizer recommendation with status & conversion
+                // 7. fertilizer recommendation with clean logic & safety caps
                 const nVal = N, pVal = P, kVal = K;
                 let nStatus = nVal<200?'Deficient':(nVal>350?'Excess':'Optimal');
                 let pStatus = pVal<80?'Deficient':(pVal>150?'Excess':'Optimal');
                 let kStatus = kVal<140?'Deficient':(kVal>250?'Excess':'Optimal');
 
-                // Soil efficiency factor (simplified)
-                const soilEff = soilBase; // 0.6-0.9
-                let urea = Math.max(0, Math.round(( (fertilizerData.N.optimal - nVal) * 2.17 * soilEff ))); if (nVal>=350) urea=0;
-                let dap = Math.max(0, Math.round(( (fertilizerData.P.optimal - pVal) * 2.0 * soilEff ))); if (pVal>=150) dap=0;
-                let mop = Math.max(0, Math.round(( (fertilizerData.K.optimal - kVal) * 1.67 * soilEff ))); if (kVal>=250) mop=0;
-                urea = Math.min(550, urea); dap = Math.min(300, dap); mop = Math.min(250, mop);
+                const soilEff = soilBase; 
+                // clean IF based recommendation
+                let urea = 0, dap = 0, mop = 0;
+                if (nVal < fertilizerData.N.optimal) {
+                    urea = (fertilizerData.N.optimal - nVal) * 2.17 * soilEff;
+                }
+                if (pVal < fertilizerData.P.optimal) {
+                    dap = (fertilizerData.P.optimal - pVal) * 2.0 * soilEff;
+                }
+                if (kVal < fertilizerData.K.optimal) {
+                    mop = (fertilizerData.K.optimal - kVal) * 1.67 * soilEff;
+                }
+                // safety caps
+                urea = Math.min(550, Math.max(0, Math.round(urea)));
+                dap = Math.min(300, Math.max(0, Math.round(dap)));
+                mop = Math.min(250, Math.max(0, Math.round(mop)));
 
                 let fertExplain = `मृदा दक्षता कारक ${Math.round(soilEff*100)}% के आधार पर सलाह.`;
 
-                // 8. build result object
+                // 8. sensitivity analysis (soil/nutrient/weather impact on total)
+                const totalWeighted = (soilScore*0.4) + (nutrientScore*0.3) + (weatherScore*0.3);
+                const sensSoil = totalWeighted > 0 ? Math.round((soilScore*0.4 / totalWeighted)*100) : 0;
+                const sensNutrient = totalWeighted > 0 ? Math.round((nutrientScore*0.3 / totalWeighted)*100) : 0;
+                const sensWeather = totalWeighted > 0 ? Math.round((weatherScore*0.3 / totalWeighted)*100) : 0;
+
                 const profit = calculateProfit(finalYield);
                 const result = {
                     soilScore: Math.round(soilScore), weatherScore: Math.round(weatherScore),
                     nutrientScore: Math.round(nutrientScore), growthAdjusted: Math.round(growthAdjusted),
                     yield: finalYield, diseaseRisk, diseaseLevel, diseaseName, warnings,
                     fertilizer: { ureaKgPerHa: urea, dapKgPerHa: dap, mopKgPerHa: mop, nStatus, pStatus, kStatus, fertExplain },
-                    profit
+                    profit,
+                    sensitivity: { soil: sensSoil, nutrient: sensNutrient, weather: sensWeather }
                 };
                 lastResult = result;
                 updateUI(result);
                 updateCharts(result);
+                
+                // Voice state reset + enable listen button
+                isSpeaking = false; 
                 listenBtn.disabled = false;
+                listenBtn.classList.remove('speaking');
+                const icon = listenBtn.querySelector('i');
+                if (icon) icon.className = 'fas fa-microphone';
+                if (btnText) btnText.textContent = ' Listen Report';
+                
             } catch (e) { console.error(e); alert('विश्लेषण में त्रुटि'); } finally {
                 loader.classList.add('hidden');
             }
@@ -394,82 +442,4 @@
 
     function updateUI(r) {
         document.getElementById('growthScore').innerText = r.growthAdjusted+'%';
-        document.getElementById('yieldVal').innerText = r.yield;
-        document.getElementById('diseaseRisk').innerHTML = `${r.diseaseRisk}% (${r.diseaseLevel})`;
-        document.getElementById('soilScore').innerText = r.soilScore+'%';
-        document.getElementById('soilScoreVal').innerText = r.soilScore+'%';
-        document.getElementById('weatherScoreVal').innerText = r.weatherScore+'%';
-        document.getElementById('nutrientScoreVal').innerText = r.nutrientScore+'%';
-        document.getElementById('overallGrowthVal').innerText = r.growthAdjusted+'%';
-        document.getElementById('soilBar').style.width = r.soilScore+'%';
-        document.getElementById('weatherBar').style.width = r.weatherScore+'%';
-        document.getElementById('nutrientBar').style.width = r.nutrientScore+'%';
-        document.getElementById('overallBar').style.width = r.growthAdjusted+'%';
-        document.getElementById('diseaseName').innerText = r.diseaseName;
-        document.getElementById('diseaseLevel').innerText = `जोखिम स्तर: ${r.diseaseLevel}`;
-        let warnHtml = ''; r.warnings.forEach(w=>warnHtml+=`<li>${w}</li>`);
-        document.getElementById('diseaseWarnings').innerHTML = warnHtml || '<li>कोई चेतावनी नहीं</li>';
-
-        document.getElementById('fertNstatus').innerHTML = `नाइट्रोजन (N): ${r.fertilizer.nStatus}`;
-        document.getElementById('fertPstatus').innerHTML = `फॉस्फोरस (P): ${r.fertilizer.pStatus}`;
-        document.getElementById('fertKstatus').innerHTML = `पोटैशियम (K): ${r.fertilizer.kStatus}`;
-        document.getElementById('ureaRec').innerText = r.fertilizer.ureaKgPerHa;
-        document.getElementById('dapRec').innerText = r.fertilizer.dapKgPerHa;
-        document.getElementById('mopRec').innerText = r.fertilizer.mopKgPerHa;
-        document.getElementById('fertExplain').innerText = r.fertilizer.fertExplain;
-
-        // profit tab
-        document.getElementById('grossIncome').innerText = '₹'+Math.round(r.profit.gross).toLocaleString();
-        document.getElementById('netProfit').innerText = '₹'+Math.round(r.profit.netProfit).toLocaleString();
-        document.getElementById('roi').innerText = r.profit.roi.toFixed(1)+'%';
-        document.getElementById('yourYieldField').innerText = r.yield;
-        const breakeven = 120000/(10*315);
-        document.getElementById('breakevenYield').innerText = breakeven.toFixed(1);
-        let compPercent = Math.min(100, (r.yield / 130)*100);
-        document.getElementById('compareBar').style.width = compPercent+'%';
-    }
-
-    function updateCharts(r) {
-        if (growthChart) growthChart.destroy();
-        if (npkChart) npkChart.destroy();
-        const gCtx = document.getElementById('growthChart').getContext('2d');
-        growthChart = new Chart(gCtx, {
-            type:'bar', data: {
-                labels:['मृदा','पोषक','मौसम','वृद्धि'],
-                datasets:[{ label:'स्कोर (%)', data:[r.soilScore, r.nutrientScore, r.weatherScore, r.growthAdjusted], backgroundColor:['#3b82f6','#f59e0b','#10b981','#8b5cf6'] }]
-            }
-        });
-        const npkCtx = document.getElementById('npkChart').getContext('2d');
-        npkChart = new Chart(npkCtx, {
-            type:'bar', data: {
-                labels:['N','P','K'],
-                datasets:[{ label:'वर्तमान स्तर', data:[+nEl.value, +pEl.value, +kEl.value], backgroundColor:'#f97316' }]
-            }
-        });
-    }
-
-    // ----- event listeners -----
-    analyzeBtn.addEventListener('click', performAnalysis);
-    
-    listenBtn.addEventListener('click', () => {
-        if (!lastResult) { alert('कृपया पहले कैलकुलेट करें'); return; }
-        if (isSpeaking) stopSpeaking(); else speakReport(lastResult);
-    });
-
-    // Tabs
-    tabAnalysisBtn.addEventListener('click',()=>{
-        tabAnalysisBtn.classList.add('tab-active'); tabProfitBtn.classList.remove('tab-active');
-        analysisDiv.classList.remove('hidden'); profitDiv.classList.add('hidden');
-    });
-    tabProfitBtn.addEventListener('click',()=>{
-        tabProfitBtn.classList.add('tab-active'); tabAnalysisBtn.classList.remove('tab-active');
-        profitDiv.classList.remove('hidden'); analysisDiv.classList.add('hidden');
-    });
-
-    // Reset speaking on beforeunload & load
-    window.addEventListener('beforeunload', stopSpeaking);
-    window.addEventListener('load', ()=>{ stopSpeaking(); listenBtn.disabled=true; });
-})();
-</script>
-</body>
-</html>
+        document.getElementById('yieldVal').innerText =
