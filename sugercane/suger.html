@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>किसान साथी · उन्नत गन्ना एआई (उत्तर प्रदेश)</title>
+  <title>Farmer Friend · Advanced Sugarcane AI (Uttar Pradesh)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -60,100 +60,98 @@
     .voice-btn.speaking { background-color: #dc2626; animation: pulse 1.5s infinite; }
     .voice-btn.speaking i { animation: spin 2s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    /* हिंदी टाइपोग्राफी थोड़ी बड़ी */
-    .hi-text { font-size: 1rem; line-height: 1.6; }
   </style>
 </head>
 <body class="bg-gray-50 text-slate-800">
 
 <div class="container mx-auto px-4 py-8">
   <header class="mb-6 text-center">
-    <h1 class="text-3xl font-bold text-green-800 mb-1">🌱 किसान साथी · उन्नत गन्ना एआई (उत्तर प्रदेश)</h1>
-    <p class="text-gray-600 simple-english">यूपी के हिसाब से बारिश, स्टेज, एफआरपी ₹315/क्विंटल</p>
+    <h1 class="text-3xl font-bold text-green-800 mb-1">🌱 Farmer Friend · Advanced Sugarcane AI (Uttar Pradesh)</h1>
+    <p class="text-gray-600 simple-english">UP specific rainfall penalties, stage-based logic, FRP ₹315/quintal</p>
   </header>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- INPUT PANEL (सभी लेबल हिंदी में) -->
+    <!-- INPUT PANEL -->
     <div class="bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold text-green-700 mb-4">🌾 आपका गन्ना खेत</h2>
+      <h2 class="text-xl font-semibold text-green-700 mb-4"> Your Sugarcane Field</h2>
       
-      <!-- CROP STAGE SELECTOR -->
+      <!-- CROP STAGE SELECTOR (UP specific) -->
       <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <label class="text-sm font-medium text-gray-700 block mb-1">🌾 फसल की अवस्था (उत्तर प्रदेश)</label>
+        <label class="text-sm font-medium text-gray-700 block mb-1">🌾 Crop stage (Uttar Pradesh)</label>
         <select id="cropStage" class="w-full px-3 py-2 border rounded-md">
-          <option value="Germination">अंकुरण (0-30 दिन)</option>
-          <option value="Tillering">गुड़ाई / कल्ले निकलना (30-60 दिन)</option>
-          <option value="Grand Growth" selected>वृद्धि काल (60-150 दिन)</option>
-          <option value="Maturity">पकाव (150-210 दिन)</option>
-          <option value="Ratoon">पेड़ी / रतून</option>
+          <option value="Germination">Germination (0-30 days)</option>
+          <option value="Tillering">Tillering (30-60 days)</option>
+          <option value="Grand Growth" selected>Grand Growth (60-150 days)</option>
+          <option value="Maturity">Maturity (150-210 days)</option>
+          <option value="Ratoon">Ratoon Crop</option>
         </select>
-        <p class="text-xs text-gray-500 mt-1">यूपी कृषि के अनुसार स्टेज के हिसाब से असर</p>
+        <p class="text-xs text-gray-500 mt-1">Stage-specific penalties based on UP agronomy</p>
       </div>
 
       <!-- IRRIGATION CHECKBOX -->
       <div class="mb-4 flex items-center gap-2">
         <input type="checkbox" id="irrigation" class="w-4 h-4 text-green-600">
-        <label for="irrigation" class="text-sm font-medium text-gray-700">🚜 सिंचाई उपलब्ध है (सूखे का असर कम होगा)</label>
+        <label for="irrigation" class="text-sm font-medium text-gray-700">🚜 Irrigation available (reduces drought penalty)</label>
       </div>
 
       <form id="cropForm" class="space-y-4" onsubmit="return false;">
         <div>
-          <label class="text-sm font-medium text-gray-700">जिला (उत्तर प्रदेश)</label>
+          <label class="text-sm font-medium text-gray-700">District (UP)</label>
           <select id="district" class="w-full mt-1 px-3 py-2 border rounded-md">
-            <option value="">-- जिला चुनें --</option>
-            <option value="Lucknow">लखनऊ</option><option value="Agra">आगरा</option><option value="Gorakhpur">गोरखपुर</option><option value="Varanasi">वाराणसी</option><option value="Jhansi">झाँसी</option>
+            <option value="">-- choose district --</option>
+            <option value="Lucknow">Lucknow</option><option value="Agra">Agra</option><option value="Gorakhpur">Gorakhpur</option><option value="Varanasi">Varanasi</option><option value="Jhansi">Jhansi</option>
           </select>
         </div>
         <div>
-          <label class="text-sm font-medium text-gray-700">मिट्टी की बनावट</label>
+          <label class="text-sm font-medium text-gray-700">Soil texture</label>
           <select id="soilTexture" class="w-full mt-1 px-3 py-2 border rounded-md">
-            <option value="">-- मिट्टी चुनें --</option>
-            <option value="Clay Loam">चिकनी दोमट</option><option value="Silty Clay Loam">गाद-चिकनी दोमट</option><option value="Silty Loam">गाद दोमट</option><option value="Clay">चिकनी</option><option value="Loam">दोमट</option>
+            <option value="">-- choose soil type --</option>
+            <option value="Clay Loam">Clay Loam</option><option value="Silty Clay Loam">Silty Clay Loam</option><option value="Silty Loam">Silty Loam</option><option value="Clay">Clay</option><option value="Loam">Loam</option>
           </select>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div><label class="text-sm">मिट्टी का pH (4-9)</label><input id="soilPh" step="0.1" type="number" value="6.8" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">अच्छा: 6.2–7.5</p></div>
-          <div><label class="text-sm">मिट्टी की नमी (%)</label><input id="soilMoisture" type="number" value="70" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">सही: 70–80%</p></div>
-          <div><label class="text-sm">नाइट्रोजन (N) kg/हेक्टेयर</label><input id="nitrogen" type="number" value="280" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">सही: 250–350</p></div>
-          <div><label class="text-sm">फॉस्फोरस (P) kg/हेक्टेयर</label><input id="phosphorus" type="number" value="120" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">सही: 100–150</p></div>
-          <div><label class="text-sm">पोटाश (K) kg/हेक्टेयर</label><input id="potassium" type="number" value="200" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">सही: 180–250</p></div>
-          <div><label class="text-sm">तापमान (°C)</label><input id="temperature" step="0.1" type="number" value="30" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">20–35°C उपयुक्त</p></div>
-          <div><label class="text-sm">हवा में नमी (%)</label><input id="humidity" type="number" value="75" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">सही 60–85%</p></div>
-          <div><label class="text-sm">बारिश (mm)</label><input id="rainfall" type="number" value="900" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">यूपी सामान्य 800–1200mm</p></div>
+          <div><label class="text-sm">Soil pH (4-9)</label><input id="soilPh" step="0.1" type="number" value="6.8" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">ideal: 6.2–7.5</p></div>
+          <div><label class="text-sm">Soil moisture (%)</label><input id="soilMoisture" type="number" value="70" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">field capacity 70–80%</p></div>
+          <div><label class="text-sm">Nitrogen (N) kg/ha</label><input id="nitrogen" type="number" value="280" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">ideal: 250–350</p></div>
+          <div><label class="text-sm">Phosphorus (P) kg/ha</label><input id="phosphorus" type="number" value="120" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">ideal: 100–150</p></div>
+          <div><label class="text-sm">Potassium (K) kg/ha</label><input id="potassium" type="number" value="200" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">ideal: 180–250</p></div>
+          <div><label class="text-sm">Temperature (°C)</label><input id="temperature" step="0.1" type="number" value="30" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">20–35°C optimal</p></div>
+          <div><label class="text-sm">Humidity (%)</label><input id="humidity" type="number" value="75" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">optimal 60–85%</p></div>
+          <div><label class="text-sm">Rainfall (mm)</label><input id="rainfall" type="number" value="900" class="w-full mt-1 px-3 py-2 border rounded-md" /><p class="text-xs text-gray-500">UP normal 800–1200mm</p></div>
         </div>
         <div class="flex gap-2">
-          <button type="button" id="resetBtn" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"><i class="fas fa-redo mr-2"></i>फिर से भरें</button>
-          <button type="button" id="calculateBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"><i class="fas fa-calculator mr-2"></i>रिपोर्ट बनाएं</button>
+          <button type="button" id="resetBtn" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"><i class="fas fa-redo mr-2"></i>Reset</button>
+          <button type="button" id="calculateBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"><i class="fas fa-calculator mr-2"></i>Calculate</button>
         </div>
       </form>
     </div>
 
-    <!-- RESULTS SECTION (सभी हिंदी लेबल) -->
+    <!-- RESULTS SECTION -->
     <div class="bg-white p-6 rounded-lg shadow-md">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold text-green-700">गन्ना खेत रिपोर्ट</h2>
-        <button id="diseaseBtn" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-md"><i class="fas fa-bug mr-1"></i>बीमारी की जानकारी</button>
+        <h2 class="text-xl font-semibold text-green-700">Sugarcane Field Report</h2>
+        <button id="diseaseBtn" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-md"><i class="fas fa-bug mr-1"></i>Disease info</button>
       </div>
-      <button id="downloadImageBtn" class="mb-3 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md"><i class="fas fa-download mr-2"></i>रिपोर्ट डाउनलोड करें</button>
+      <button id="downloadImageBtn" class="mb-3 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md"><i class="fas fa-download mr-2"></i>Download report</button>
 
       <!-- TABS -->
       <div class="tabs">
-        <button id="analysisTab" class="active-tab">विश्लेषण रिपोर्ट</button>
-        <button id="profitTab" disabled class="opacity-50 cursor-not-allowed">कमाई का हिसाब</button>
+        <button id="analysisTab" class="active-tab">Analysis Report</button>
+        <button id="profitTab" disabled class="opacity-50 cursor-not-allowed">Economic Profit</button>
       </div>
 
       <div id="resultsContainer" class="space-y-4">
-        <div id="placeholderIntro" class="text-center py-8 text-gray-400"><i class="fas fa-leaf text-4xl mb-2"></i><p class="simple-english">खेत की जानकारी भरें और 'रिपोर्ट बनाएं' दबाएँ</p></div>
-        <div id="warningBox" class="hidden bg-red-100 border border-red-200 text-red-800 p-3 rounded-lg flex gap-2 items-center"><i class="fas fa-triangle-exclamation"></i><span id="warningText" class="simple-english">सभी खाने भरें</span></div>
-        <div id="loaderArea" class="hidden p-4 bg-white rounded-lg border"><div class="flex items-center gap-3"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div><div><div class="font-medium">खेत का विश्लेषण हो रहा है<span class="dots"></span></div><div class="text-xs text-gray-500">बस एक पल...</div></div></div></div>
+        <div id="placeholderIntro" class="text-center py-8 text-gray-400"><i class="fas fa-leaf text-4xl mb-2"></i><p class="simple-english">Enter details and click Calculate</p></div>
+        <div id="warningBox" class="hidden bg-red-100 border border-red-200 text-red-800 p-3 rounded-lg flex gap-2 items-center"><i class="fas fa-triangle-exclamation"></i><span id="warningText" class="simple-english">Please fill all fields</span></div>
+        <div id="loaderArea" class="hidden p-4 bg-white rounded-lg border"><div class="flex items-center gap-3"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div><div><div class="font-medium">Analyzing field<span class="dots"></span></div><div class="text-xs text-gray-500">Just a moment...</div></div></div></div>
 
-        <!-- ANALYSIS SECTION (हिंदी लेबल) -->
+        <!-- ANALYSIS SECTION -->
         <div id="analysisSection" class="space-y-4">
-          <!-- VOICE BUTTON (हिंदी टेक्स्ट) -->
+          <!-- ENHANCED VOICE BUTTON -->
           <div class="flex justify-end">
             <button id="listenBtn" class="voice-btn" disabled>
               <i class="fas fa-microphone"></i>
-              <span class="btn-text">रिपोर्ट सुनें</span>
+              <span class="btn-text"> Listen Report</span>
             </button>
           </div>
           
@@ -161,7 +159,7 @@
             <!-- Growth Scores -->
             <div class="bg-green-50 p-4 rounded-lg">
               <div class="flex justify-between mb-2">
-                <h3 class="font-medium text-green-800">फसल की शुरुआती सेहत</h3>
+                <h3 class="font-medium text-green-800">Raw growth score</h3>
                 <span id="growthRawLabel" class="text-lg font-bold text-green-700">0/100</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2.5 mb-3">
@@ -169,7 +167,7 @@
               </div>
               
               <div class="flex justify-between">
-                <h3 class="font-medium text-green-800">असली फसल ताकत</h3>
+                <h3 class="font-medium text-green-800">Adjusted growth (disease + stage + heat)</h3>
                 <span id="growthAdjustedLabel" class="text-lg font-bold text-green-700">0/100</span>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2.5">
@@ -180,26 +178,26 @@
             <!-- Yield and Disease -->
             <div class="grid grid-cols-2 gap-4">
               <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-medium text-blue-800">अनुमानित उत्पादन (टन/हेक्टेयर)</h3>
+                <h3 class="font-medium text-blue-800">Expected yield</h3>
                 <p id="expectedYieldLabel" class="text-2xl font-bold text-blue-700">— t/ha</p>
-                <p class="text-xs text-gray-600">(60–130 टन/हेक्टेयर)</p>
+                <p class="text-xs text-gray-600">(60–130 t/ha range)</p>
               </div>
               <div class="bg-purple-50 p-4 rounded-lg">
-                <h3 class="font-medium text-purple-800">बीमारी का खतरा</h3>
+                <h3 class="font-medium text-purple-800">Disease risk</h3>
                 <p id="diseaseRiskLabel" class="text-2xl font-bold text-red-600">—</p>
-                <p id="riskScoreLabel" class="text-xs text-gray-600">स्कोर 0%</p>
+                <p id="riskScoreLabel" class="text-xs text-gray-600">score 0%</p>
               </div>
             </div>
             
             <!-- Soil and Weather -->
             <div class="grid grid-cols-2 gap-4">
               <div class="bg-yellow-50 p-4 rounded-lg">
-                <h3 class="font-medium text-yellow-800">मिट्टी की स्थिति</h3>
+                <h3 class="font-medium text-yellow-800">Soil suitability</h3>
                 <div class="flex items-center"><span id="soilScoreLabel" class="text-2xl font-bold text-yellow-700 mr-2">0%</span>
                 <div class="w-full bg-gray-200 rounded-full h-2.5"><div id="soilBar" class="progress-bar bg-yellow-500 h-2.5 rounded-full" style="width:0%"></div></div></div>
               </div>
               <div class="bg-indigo-50 p-4 rounded-lg">
-                <h3 class="font-medium text-indigo-800">मौसम की स्थिति</h3>
+                <h3 class="font-medium text-indigo-800">Weather suitability</h3>
                 <div class="flex items-center"><span id="weatherScoreLabel" class="text-2xl font-bold text-indigo-700 mr-2">0%</span>
                 <div class="w-full bg-gray-200 rounded-full h-2.5"><div id="weatherBar" class="progress-bar bg-indigo-500 h-2.5 rounded-full" style="width:0%"></div></div></div>
               </div>
@@ -207,35 +205,35 @@
             
             <!-- Sensitivity Analysis -->
             <div class="bg-white border border-gray-200 p-4 rounded-lg">
-              <h3 class="font-medium text-gray-800 mb-3">फसल पर सबसे ज्यादा असर किसका?</h3>
+              <h3 class="font-medium text-gray-800 mb-3">What affects your crop most?</h3>
               <div class="space-y-2">
-                <div><div class="flex justify-between text-sm"><span>मिट्टी</span><span id="soilPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="soilPercentBar" class="sensitivity-bar bg-yellow-500" style="width:0%"></div></div></div>
-                <div><div class="flex justify-between text-sm"><span>खाद (N,P,K)</span><span id="nutrientPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="nutrientPercentBar" class="sensitivity-bar bg-green-500" style="width:0%"></div></div></div>
-                <div><div class="flex justify-between text-sm"><span>मौसम</span><span id="weatherPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="weatherPercentBar" class="sensitivity-bar bg-blue-500" style="width:0%"></div></div></div>
+                <div><div class="flex justify-between text-sm"><span>Soil</span><span id="soilPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="soilPercentBar" class="sensitivity-bar bg-yellow-500" style="width:0%"></div></div></div>
+                <div><div class="flex justify-between text-sm"><span>Nutrients</span><span id="nutrientPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="nutrientPercentBar" class="sensitivity-bar bg-green-500" style="width:0%"></div></div></div>
+                <div><div class="flex justify-between text-sm"><span>Weather</span><span id="weatherPercentLabel">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="weatherPercentBar" class="sensitivity-bar bg-blue-500" style="width:0%"></div></div></div>
               </div>
             </div>
             
-            <!-- FERTILIZER RECOMMENDATION (हिंदी) -->
+            <!-- FERTILIZER RECOMMENDATION -->
             <div class="bg-white border-2 border-green-200 p-4 rounded-lg">
               <div class="flex justify-between items-center mb-3">
-                <h3 class="font-bold text-green-800">खाद की सलाह (यूरिया/डीएपी/एमओपी)</h3>
-                <button id="viewDetailsBtn" class="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700">कैसे तय होती है?</button>
+                <h3 class="font-bold text-green-800">Fertilizer advice (Urea/DAP/MOP)</h3>
+                <button id="viewDetailsBtn" class="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700">How we calculate</button>
               </div>
               <div class="grid grid-cols-3 gap-2 mb-4">
-                <div class="text-center"><span class="text-sm font-medium">नाइट्रोजन खाद</span><div><span id="nStatusBadge" class="status-badge">—</span></div></div>
-                <div class="text-center"><span class="text-sm font-medium">फॉस्फोरस खाद</span><div><span id="pStatusBadge" class="status-badge">—</span></div></div>
-                <div class="text-center"><span class="text-sm font-medium">पोटाश खाद</span><div><span id="kStatusBadge" class="status-badge">—</span></div></div>
+                <div class="text-center"><span class="text-sm font-medium">Nitrogen (N)</span><div><span id="nStatusBadge" class="status-badge">—</span></div></div>
+                <div class="text-center"><span class="text-sm font-medium">Phosphorus (P)</span><div><span id="pStatusBadge" class="status-badge">—</span></div></div>
+                <div class="text-center"><span class="text-sm font-medium">Potassium (K)</span><div><span id="kStatusBadge" class="status-badge">—</span></div></div>
               </div>
               <div class="grid grid-cols-3 gap-3 mb-4">
-                <div class="bg-blue-50 p-2 rounded text-center"><div class="text-xs text-gray-600">यूरिया (kg/ha)</div><div class="text-xl font-bold text-blue-700" id="ureaDose">0</div></div>
-                <div class="bg-purple-50 p-2 rounded text-center"><div class="text-xs text-gray-600">डीएपी (kg/ha)</div><div class="text-xl font-bold text-purple-700" id="dapDose">0</div></div>
-                <div class="bg-amber-50 p-2 rounded text-center"><div class="text-xs text-gray-600">एमओपी (kg/ha)</div><div class="text-xl font-bold text-amber-700" id="mopDose">0</div></div>
+                <div class="bg-blue-50 p-2 rounded text-center"><div class="text-xs text-gray-600">Urea (kg/ha)</div><div class="text-xl font-bold text-blue-700" id="ureaDose">0</div></div>
+                <div class="bg-purple-50 p-2 rounded text-center"><div class="text-xs text-gray-600">DAP (kg/ha)</div><div class="text-xl font-bold text-purple-700" id="dapDose">0</div></div>
+                <div class="bg-amber-50 p-2 rounded text-center"><div class="text-xs text-gray-600">MOP (kg/ha)</div><div class="text-xl font-bold text-amber-700" id="mopDose">0</div></div>
               </div>
-              <div class="bg-gray-50 p-2 rounded mb-2 text-sm"><span class="font-semibold">मिट्टी की गुणवत्ता:</span> <span id="efficiencyFactor">0%</span></div>
+              <div class="bg-gray-50 p-2 rounded mb-2 text-sm"><span class="font-semibold">Soil efficiency factor:</span> <span id="efficiencyFactor">0%</span></div>
               <div class="space-y-2 text-sm">
-                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">नाइट्रोजन:</span> <span id="nitrogenMethodText" class="simple-english">—</span></div>
-                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">फॉस्फोरस:</span> <span id="phosphorusMethodText" class="simple-english">—</span></div>
-                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">पोटाश:</span> <span id="potassiumMethodText" class="simple-english">—</span></div>
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Nitrogen:</span> <span id="nitrogenMethodText" class="simple-english">—</span></div>
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Phosphorus:</span> <span id="phosphorusMethodText" class="simple-english">—</span></div>
+                <div class="bg-green-50 p-2 rounded"><span class="font-semibold">Potassium:</span> <span id="potassiumMethodText" class="simple-english">—</span></div>
               </div>
               <div id="fertilizerWarnings" class="mt-3 space-y-1"></div>
             </div>
@@ -246,31 +244,31 @@
           </div>
         </div>
 
-        <!-- PROFIT SECTION (हिंदी) -->
+        <!-- PROFIT SECTION (hidden by default) -->
         <div id="profitSection" class="hidden space-y-4">
           <div class="bg-gradient-to-r from-emerald-50 to-green-50 p-5 rounded-xl border border-green-200">
-            <h3 class="text-lg font-bold text-green-800 mb-3">कमाई का हिसाब (FRP 2024-25: ₹315/क्विंटल)</h3>
+            <h3 class="text-lg font-bold text-green-800 mb-3">Economic Profit (FRP 2024-25: ₹315/quintal)</h3>
             <div class="profit-card mb-3">
-              <div class="comparison-row"><span>कुल आमदनी (₹/हेक्टेयर):</span> <span id="grossIncomeVal" class="font-bold">0</span></div>
-              <div class="comparison-row"><span>शुद्ध कमाई (₹/हेक्टेयर):</span> <span id="netProfitVal" class="font-bold">0</span></div>
-              <div class="comparison-row"><span>निवेश पर लाभ (ROI):</span> <span id="roiVal" class="font-bold">0%</span></div>
-              <div class="comparison-row"><span>खर्च निकलने की उपज (t/ha):</span> <span id="breakevenVal" class="font-bold">0</span></div>
+              <div class="comparison-row"><span>Gross Income (₹/ha):</span> <span id="grossIncomeVal" class="font-bold">0</span></div>
+              <div class="comparison-row"><span>Net Profit (₹/ha):</span> <span id="netProfitVal" class="font-bold">0</span></div>
+              <div class="comparison-row"><span>Return on Investment (ROI):</span> <span id="roiVal" class="font-bold">0%</span></div>
+              <div class="comparison-row"><span>Break-even Yield (t/ha):</span> <span id="breakevenVal" class="font-bold">0</span></div>
             </div>
-            <p class="text-xs text-gray-500 mt-2">यूपी औसत लागत: ₹1,20,000/हेक्टेयर</p>
+            <p class="text-xs text-gray-500 mt-2">Cost of cultivation (UP avg): ₹1,20,000/ha</p>
           </div>
 
           <!-- BEST POSSIBLE COMPARISON -->
           <div class="bg-amber-50 p-5 rounded-xl border border-amber-300">
-            <h3 class="text-lg font-bold text-amber-800 mb-3">आपका खेत बनाम सबसे अच्छी स्थिति</h3>
+            <h3 class="text-lg font-bold text-amber-800 mb-3"> Your Field vs Best Possible (UP ideal)</h3>
             <div class="grid grid-cols-2 gap-4 text-sm">
-              <div class="bg-white p-3 rounded"><span class="font-semibold">आपकी फसल ताकत</span><p id="yourGrowthComp" class="text-xl font-bold text-green-700">0%</p></div>
-              <div class="bg-white p-3 rounded"><span class="font-semibold">आदर्श ताकत</span><p id="bestGrowthComp" class="text-xl font-bold text-amber-700">0%</p></div>
-              <div class="bg-white p-3 rounded"><span class="font-semibold">आपका उत्पादन</span><p id="yourYieldComp" class="text-xl font-bold text-blue-700">0 t/ha</p></div>
-              <div class="bg-white p-3 rounded"><span class="font-semibold">आदर्श उत्पादन</span><p id="bestYieldComp" class="text-xl font-bold text-blue-700">130 t/ha</p></div>
-              <div class="bg-white p-3 rounded col-span-2"><span class="font-semibold">आपकी शुद्ध कमाई</span><p id="yourProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p></div>
-              <div class="bg-white p-3 rounded col-span-2"><span class="font-semibold">आदर्श शुद्ध कमाई</span><p id="bestProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Your Adjusted Growth</span><p id="yourGrowthComp" class="text-xl font-bold text-green-700">0%</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Best Growth</span><p id="bestGrowthComp" class="text-xl font-bold text-amber-700">0%</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Your Yield</span><p id="yourYieldComp" class="text-xl font-bold text-blue-700">0 t/ha</p></div>
+              <div class="bg-white p-3 rounded"><span class="font-semibold">Best Yield</span><p id="bestYieldComp" class="text-xl font-bold text-blue-700">130 t/ha</p></div>
+              <div class="bg-white p-3 rounded col-span-2"><span class="font-semibold">Your Net Profit</span><p id="yourProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p></div>
+              <div class="bg-white p-3 rounded col-span-2"><span class="font-semibold">Best Net Profit</span><p id="bestProfitComp" class="text-xl font-bold text-emerald-700">₹0/ha</p></div>
             </div>
-            <p class="text-xs text-gray-500 mt-2">आदर्श: pH 6.5, नमी 75%, N 280, P 120, K 200, ताप 28°C, नमी 75%, बारिश 1000mm</p>
+            <p class="text-xs text-gray-500 mt-2">Ideal: pH 6.5, moisture 75%, N 280, P 120, K 200, temp 28°C, humidity 75%, rainfall 1000mm</p>
           </div>
         </div>
       </div>
@@ -278,18 +276,18 @@
   </div>
 </div>
 
-<!-- Disease modal (हिंदी) -->
+<!-- Disease modal -->
 <div id="diseaseModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
   <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-auto p-6">
-    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🌾 गन्ने की बीमारियाँ (उत्तर प्रदेश)</h3><button id="closeModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
-    <table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">बीमारी</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">कारण</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">लक्षण</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">बचाव</th></tr></thead><tbody id="diseaseTbody"></tbody></table>
+    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🌾 Sugarcane diseases (Uttar Pradesh)</h3><button id="closeModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
+    <table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Disease</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Triggers</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Symptoms</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Prevention</th></tr></thead><tbody id="diseaseTbody"></tbody></table>
   </div>
 </div>
 
-<!-- Technical modal (खाद विधि हिंदी) -->
+<!-- Technical modal -->
 <div id="fertilizerModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center p-4 z-50">
   <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6">
-    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🧪 खाद की सलाह - आसान भाषा में</h3><button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
+    <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-green-800">🧪 Fertilizer calculation - आसान भाषा में समझें</h3><button id="closeFertilizerModal" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button></div>
     <div id="fertilizerDetails" class="space-y-4 simple-english">
       <!-- populated by JS -->
     </div>
@@ -298,7 +296,7 @@
 
 <script>
 (function() {
-  // ==================== SUGARCANE ENGINE (UP specific) ==================== (सब कैल्कुलेशन पहले जैसा)
+  // ==================== SUGARCANE ENGINE (UP specific) ====================
   
   // DOM elements
   const districtEl = document.getElementById('district');
@@ -370,13 +368,12 @@
   const analysisSection = document.getElementById('analysisSection');
   const profitSection = document.getElementById('profitSection');
 
-  // ========== VOICE ASSISTANT ========== (महिला हिंदी आवाज, धीमी, साफ)
+  // ========== VOICE ASSISTANT ==========
   const listenBtn = document.getElementById('listenBtn');
   const btnText = listenBtn ? listenBtn.querySelector('.btn-text') : null;
   let lastResult = null;
   let isSpeaking = false;
   let currentUtterance = null;
-  let selectedFemaleHindiVoice = null;
 
   // profit display elements
   const grossIncomeVal = document.getElementById('grossIncomeVal');
@@ -406,13 +403,13 @@
 
   // Disease data (sugarcane)
   const diseaseData = [
-    { name: "लाल सड़न", triggers: "उच्च N (>320) + अधिक नमी (>85%), जलभराव", symptoms: "तने के अंदर लाली, मुरझान", prevention: "रोगमुक्त बीज, जल निकासी" },
-    { name: "काली गाँठ", triggers: "तापमान >35°C + कम नमी (<50%)", symptoms: "काली कोड़े जैसी संरचना", prevention: "गर्म पानी उपचार, रोगरोधी किस्म" },
-    { name: "मुरझान", triggers: "जलभराव (नमी>90%, बारिश>1200mm)", symptoms: "पीलापन, तने में रंग बदलना", prevention: "जल निकासी, सौर उपचार" },
-    { name: "रतुआ", triggers: "नमी 80–90%, ताप 20–30°C", symptoms: "पत्तियों पर नारंगी धब्बे", prevention: "रोगरोधी किस्म, फसल चक्र" },
-    { name: "घास जैसे अंकुर", triggers: "फाइटोप्लाज्मा, कीड़े", symptoms: "घास जैसे अंकुर", prevention: "रोगमुक्त बीज" },
-    { name: "पोक्का बोएंग", triggers: "उच्च N + जलभराव", symptoms: "पत्ती विकृति, सड़न", prevention: "जल निकासी सुधारें" },
-    { name: "रतून ठिगनापन", triggers: "बार-बार रतून, कम K (<140)", symptoms: "ठिगने पौधे, गुलाबी धब्बे", prevention: "गर्म पानी उपचार, औज़ार साफ" }
+    { name: "Red Rot", triggers: "High N (>320) + high humidity (>85%), waterlogging", symptoms: "Reddish internal discoloration, wilting", prevention: "Disease-free setts, improve drainage" },
+    { name: "Smut", triggers: "Temp >35°C + low moisture (<50%)", symptoms: "Black whip-like structure", prevention: "Hot water treatment, resistant varieties" },
+    { name: "Wilt", triggers: "Waterlogging (moisture>90%, rainfall>1200mm)", symptoms: "Yellowing, vascular discoloration", prevention: "Improve drainage, solarization" },
+    { name: "Rust", triggers: "Humidity 80–90%, temp 20–30°C", symptoms: "Orange-brown pustules on leaves", prevention: "Resistant varieties, spacing" },
+    { name: "Grassy Shoot", triggers: "Phytoplasma, insect vectors", symptoms: "Grass-like shoots", prevention: "Disease-free setts" },
+    { name: "Pokkah Boeng", triggers: "High N + waterlogging", symptoms: "Leaf malformation, rotting growing points", prevention: "Improve drainage" },
+    { name: "Ratoon Stunting", triggers: "Repeated ratoon, low K (<140)", symptoms: "Stunted growth, pink discoloration", prevention: "Hot water treatment, sterilize tools" }
   ];
 
   // ========== UTILITY FUNCTIONS ==========
@@ -423,23 +420,11 @@
         listenBtn.classList.remove('speaking');
         const icon = listenBtn.querySelector('i');
         if (icon) icon.className = 'fas fa-microphone';
-        if (btnText) btnText.textContent = 'रिपोर्ट सुनें';
+        if (btnText) btnText.textContent = ' Listen Report';
       }
       isSpeaking = false;
       currentUtterance = null;
     } catch (e) { console.error(e); }
-  }
-
-  // female Hindi voice selector (धीमी 0.85)
-  function getFemaleHindiVoice() {
-    if (!window.speechSynthesis) return null;
-    const voices = window.speechSynthesis.getVoices();
-    // प्राथमिकता: महिला हिंदी
-    let voice = voices.find(v => v.lang === 'hi-IN' && (v.name.toLowerCase().includes('female') || v.name.includes('Google हिन्दी') || v.name.includes('Heera') || v.name.includes('Lekha')));
-    if (!voice) voice = voices.find(v => v.lang === 'hi-IN');  // कोई भी हिंदी
-    if (!voice) voice = voices.find(v => v.lang.startsWith('hi')); 
-    if (!voice && voices.length) voice = voices[0]; // डिफ़ॉल्ट
-    return voice;
   }
 
   function formatCurrency(value) {
@@ -471,7 +456,7 @@
     let rainScore = 1.0;
     
     if (rain < 700) {
-      rainScore = irrig ? 0.7 : 0.4;
+      rainScore = irrig ? 0.7 : 0.4;  // irrigation reduces penalty by ~50%
     } else if (rain > 1200) {
       rainScore = 0.6;
     } else {
@@ -489,44 +474,48 @@
   }
 
   // ========== DISEASE ENGINE (UP specific) ==========
+  // FIX 1 & 2 & 5: Added temp parameter, fixed rain threshold, improved label
   function computeDiseaseRisk(N, hum, moisture, rain, K, stage, temp) {
     let risk = 15; // base
     let warnings = [];
     
-    if (N > 320 && hum > 85) { risk += 25; warnings.push("लाल सड़न का उच्च जोखिम (उच्च N + नमी)"); }
-    else if (N > 300 && hum > 80) { risk += 15; warnings.push("लाल सड़न संभव"); }
+    if (N > 320 && hum > 85) { risk += 25; warnings.push("Red Rot high risk (High N + humidity)"); }
+    else if (N > 300 && hum > 80) { risk += 15; warnings.push("Red Rot possible"); }
     
-    if (temp > 35 && moisture < 50) { risk += 15; warnings.push("काली गाँठ का खतरा (गर्मी + सूखा)"); }
+    if (temp > 35 && moisture < 50) { risk += 15; warnings.push("Smut risk (heat + dry)"); }
     
-    if (rain > 1200 && moisture > 85) { risk += 20; warnings.push("मुरझान का खतरा (जलभराव)"); }
-    if (moisture > 90) { risk += 15; warnings.push("जलभराव से मुरझान बढ़ सकता है"); }
+    if (rain > 1200 && moisture > 85) { risk += 20; warnings.push("Wilt risk (waterlogging)"); }
+    if (moisture > 90) { risk += 15; warnings.push("Waterlogging increases Wilt"); }
     
     if (hum >= 80 && hum <= 90 && temp >= 20 && temp <= 30) {
-      risk += 10; warnings.push("रतुआ के लिए अनुकूल स्थितियाँ");
+      risk += 10; warnings.push("Rust favorable conditions");
     }
     
-    if (N > 320 && rain > 900) { risk += 15; warnings.push("पोक्का बोएंग का खतरा (उच्च N + भारी बारिश)"); }
+    // FIX 2: Changed rain threshold from 150 to 900
+    if (N > 320 && rain > 900) { risk += 15; warnings.push("Pokkah Boeng risk (high N + heavy rain)"); }
     
-    if (stage === 'Ratoon' && K < 140) { risk += 20; warnings.push("रतून ठिगनापन जोखिम (कम पोटाश)"); }
+    if (stage === 'Ratoon' && K < 140) { risk += 20; warnings.push("Ratoon Stunting risk (low K)"); }
     
     risk = Math.min(90, risk);
     
+    // FIX 5: Improved disease level text
     let level = 'Low';
-    let displayLevel = 'Low';
+    let displayLevel = 'Low (No major threat)';
     if (risk > 50) {
       level = 'High';
-      displayLevel = 'उच्च (तुरंत कार्रवाई करें)';
+      displayLevel = 'High (Take immediate action)';
     } else if (risk > 25) {
       level = 'Medium';
-      displayLevel = 'मध्यम (निगरानी रखें)';
+      displayLevel = 'Medium (Monitor closely)';
     } else {
-      displayLevel = 'कम (कोई बड़ा खतरा नहीं)';
+      displayLevel = 'Low (No major threat)';
     }
     
     return { level, displayLevel, score: risk, warnings };
   }
 
   // ========== STAGE PENALTIES ==========
+  // FIX 3: Added diseaseScore parameter and ratoon high disease penalty
   function applyStagePenalty(growth, stage, N, K, temp, moisture, irrig, rain, diseaseScore) {
     let penalty = 0;
     
@@ -541,13 +530,15 @@
       if (!irrig && rain < 700) penalty += 0.15;
     } else if (stage === 'Maturity') {
       if (N > 350) penalty += 0.12;
+      // humidity is now passed through the main analysis
     } else if (stage === 'Ratoon') {
       if (K < 140) penalty += 0.15;
+      // FIX 3: Additional 0.20 penalty if diseaseScore > 60
       if (diseaseScore > 60) penalty += 0.20;
     }
     
     let adjusted = growth * (1 - penalty);
-    return Math.min(100, Math.max(5, adjusted));
+    return Math.min(100, Math.max(5, adjusted)); // floor 5%
   }
 
   // ========== DISEASE PENALTY ==========
@@ -572,7 +563,7 @@
     return yMin + (yMax - yMin) / (1 + Math.exp(-0.1 * (growth - 50)));
   }
 
-  // ========== FERTILIZER RECOMMENDATION ==========
+  // ========== FERTILIZER RECOMMENDATION (sugarcane) ==========
   function calculateFertilizer(N, P, K, soilScore) {
     const ideals = { N: 250, P: 100, K: 180 };
     const conversion = { NtoUrea: 2.17, PtoDAP: 2.0, KtoMOP: 1.67 };
@@ -581,9 +572,9 @@
     const efficiency = soilScore / 100;
     let warnings = [];
     
-    let nStatus = N < 200 ? 'कमी' : (N > 350 ? 'अधिकता' : 'सही');
-    let pStatus = P < 80 ? 'कमी' : (P > 150 ? 'अधिकता' : 'सही');
-    let kStatus = K < 140 ? 'कमी' : (K > 250 ? 'अधिकता' : 'सही');
+    let nStatus = N < 200 ? 'Deficient' : (N > 350 ? 'Excess' : 'Optimal');
+    let pStatus = P < 80 ? 'Deficient' : (P > 150 ? 'Excess' : 'Optimal');
+    let kStatus = K < 140 ? 'Deficient' : (K > 250 ? 'Excess' : 'Optimal');
     
     let urea = 0, dap = 0, mop = 0;
     
@@ -595,9 +586,9 @@
     dap = Math.min(safetyCaps.DAP, Math.max(0, Math.round(dap)));
     mop = Math.min(safetyCaps.MOP, Math.max(0, Math.round(mop)));
     
-    if (N > 350) warnings.push("नाइट्रोजन अधिकता: यूरिया न डालें");
-    if (P > 150) warnings.push("फॉस्फोरस अधिकता: डीएपी न डालें");
-    if (K > 250) warnings.push("पोटाश अधिकता: एमओपी न डालें");
+    if (N > 350) warnings.push("Nitrogen excess: do not add urea");
+    if (P > 150) warnings.push("Phosphorus excess: do not add DAP");
+    if (K > 250) warnings.push("Potassium excess: do not add MOP");
     
     return {
       nitrogenStatus: nStatus,
@@ -608,17 +599,17 @@
       mopKgPerHa: mop,
       warnings,
       applicationMethod: {
-        nitrogen: N < 250 ? "आधा बुआई के समय, बाकी बाद में" : "सिर्फ रखरखाव मात्रा",
-        phosphorus: P < 100 ? "पूरी मात्रा बुआई के समय" : "फॉस्फोरस की जरूरत नहीं",
-        potassium: K < 180 ? "आधा बुआई के समय, आधा गुड़ाई पर" : "पोटाश की जरूरत नहीं"
+        nitrogen: N < 250 ? "Split: 1/2 basal, 1/4 tillering, 1/4 grand growth" : "Maintenance dose only",
+        phosphorus: P < 100 ? "Full dose as basal" : "No P needed",
+        potassium: K < 180 ? "Split: 1/2 basal, 1/2 at tillering" : "No K needed"
       }
     };
   }
 
   // ========== PROFIT CALCULATION (FRP) ==========
   function calculateProfit(yieldTons) {
-    const FRP = 315;
-    const cost = 120000;
+    const FRP = 315; // ₹ per quintal
+    const cost = 120000; // ₹/ha
     const quintal = yieldTons * 10;
     const gross = quintal * FRP;
     const net = gross - cost;
@@ -659,12 +650,12 @@
     const errors = [];
     const N = +nitrogen.value, P = +phosphorus.value, K = +potassium.value;
     const temp = +temperature.value, moist = +soilMoisture.value, ph = +soilPh.value;
-    if (N > 600) errors.push("N अधिकतम 600 kg/ha");
-    if (P > 300) errors.push("P अधिकतम 300 kg/ha");
-    if (K > 400) errors.push("K अधिकतम 400 kg/ha");
-    if (temp > 50) errors.push("तापमान अधिकतम 50°C");
-    if (moist > 100) errors.push("नमी अधिकतम 100%");
-    if (ph < 4 || ph > 9) errors.push("pH 4-9 के बीच हो");
+    if (N > 600) errors.push("N max 600 kg/ha");
+    if (P > 300) errors.push("P max 300 kg/ha");
+    if (K > 400) errors.push("K max 400 kg/ha");
+    if (temp > 50) errors.push("Temp max 50°C");
+    if (moist > 100) errors.push("Moisture max 100%");
+    if (ph < 4 || ph > 9) errors.push("pH must be 4-9");
     return errors;
   }
 
@@ -691,10 +682,12 @@
     
     const growthRaw = soilSc * 0.4 + nutrSc * 0.3 + weatherSc * 0.3;
     
+    // FIX 1: Pass temp parameter to computeDiseaseRisk
     const disease = computeDiseaseRisk(N, hum, moist, rain, K, stage, temp);
     
     let growthAdj = applyDiseasePenalty(growthRaw, disease.score);
     growthAdj = applyHeatStress(growthAdj, temp);
+    // FIX 3: Pass disease.score to applyStagePenalty
     growthAdj = applyStagePenalty(growthAdj, stage, N, K, temp, moist, irrig, rain, disease.score);
     growthAdj = Math.min(100, Math.max(5, growthAdj));
     
@@ -722,64 +715,32 @@
     };
   }
 
-  // ========== SPEAK REPORT (पूरी तरह हिंदी, किसान भाषा) ==========
+  // ========== SPEAK REPORT ==========
   function speakReport(data) {
     try {
       if (window.speechSynthesis) window.speechSynthesis.cancel();
-      
-      const district = districtEl.value || 'कोई जिला';
-      const stageText = cropStageSelect.options[cropStageSelect.selectedIndex]?.text.split(' ')[0] || 'चयनित';
+      const district = districtEl.value || 'कोई जिला नहीं';
+      const stage = cropStageSelect.options[cropStageSelect.selectedIndex]?.text.split(' ')[0] || 'चयनित';
       const profit = calculateProfit(data.yield);
       
-      // किसान के अनुकूल शब्द
-      const growthAdjustedHindi = data.growthAdjusted;
-      const yieldHindi = data.yield;
-      const soilScoreHindi = data.soilScore;
-      const weatherScoreHindi = data.weatherScore;
-      
-      let diseaseHindi = data.diseaseLevel; // already in Hindi from computeDiseaseRisk
-      
-      const urea = data.fertilizer.ureaKgPerHa;
-      const dap = data.fertilizer.dapKgPerHa;
-      const mop = data.fertilizer.mopKgPerHa;
+      let diseaseLevelHindi = 'कम';
+      if (data.diseaseLevel.includes('Medium')) diseaseLevelHindi = 'मध्यम';
+      else if (data.diseaseLevel.includes('High')) diseaseLevelHindi = 'उच्च';
 
-      const message = `नमस्ते किसान भाई। 
-आपके जिला ${district} में गन्ने की फसल की अवस्था ${stageText} है। 
-आपकी फसल की सेहत ${growthAdjustedHindi} प्रतिशत है। 
-बीमारी का खतरा ${diseaseHindi} है। 
-मिट्टी की स्थिति ${soilScoreHindi} प्रतिशत है। 
-मौसम की स्थिति ${weatherScoreHindi} प्रतिशत है। 
-आप लगभग ${yieldHindi} टन प्रति हेक्टेयर गन्ना उगा सकते हैं। 
-अनुमानित कमाई लगभग ${Math.abs(Math.round(profit.net))} रुपये ${profit.net < 0 ? 'का नुकसान' : 'का फायदा'} प्रति हेक्टेयर हो सकती है। 
-अब खाद की सलाह सुनिए। 
-${urea > 0 ? `आपको ${urea} किलो यूरिया डालना चाहिए। ` : 'यूरिया की जरूरत नहीं है। '}
-${dap > 0 ? `आपको ${dap} किलो डीएपी डालना चाहिए। ` : 'डीएपी की जरूरत नहीं है। '}
-${mop > 0 ? `आपको ${mop} किलो एमओपी डालना चाहिए। ` : 'एमओपी की जरूरत नहीं है। '}
-धन्यवाद।`;
+      const message = `नमस्ते किसान भाई। आपने जिला ${district} चुना है। आपकी गन्ना फसल की स्टेज ${stage} है। आपने जो पैरामीटर्स दिए हैं — जैसे सॉइल पीएच, मॉइश्चर, नाइट्रोजन, फॉस्फोरस, पोटैशियम, टेम्प्रेचर, ह्यूमिडिटी और रेनफॉल — उसी के आधार पर यह रिपोर्ट तैयार की गई है। आपका ग्रोथ स्कोर ${data.growthAdjusted} प्रतिशत है। आपकी अपेक्षित गन्ना उपज लगभग ${data.yield} टन प्रति हेक्टेयर हो सकती है। डिजीज रिस्क लेवल ${diseaseLevelHindi} है। सॉइल सूटेबिलिटी ${data.soilScore} प्रतिशत है। वेदर सूटेबिलिटी ${data.weatherScore} प्रतिशत है। आपका अनुमानित नेट प्रॉफिट लगभग ${Math.abs(Math.round(profit.net))} रुपये ${profit.net < 0 ? 'का नुकसान' : 'का फायदा'} प्रति हेक्टेयर हो सकता है। अब फर्टिलाइजर सलाह: ${data.fertilizer.ureaKgPerHa > 0 ? `आपको लगभग ${data.fertilizer.ureaKgPerHa} किलोग्राम यूरिया डालना चाहिए।` : `यूरिया आपको नहीं डालना है।`} ${data.fertilizer.dapKgPerHa > 0 ? `${data.fertilizer.dapKgPerHa} किलोग्राम डीएपी डालना चाहिए।` : `डीएपी आपको नहीं डालना है।`} ${data.fertilizer.mopKgPerHa > 0 ? `${data.fertilizer.mopKgPerHa} किलोग्राम एमओपी डालना चाहिए।` : `एमओपी आपको नहीं डालना है।`} यह पूरी रिपोर्ट उत्तर प्रदेश की परिस्थितियों और आपके इनपुट के आधार पर बनाई गई है। धन्यवाद।`;
 
       const utterance = new SpeechSynthesisUtterance(message);
-      
-      // महिला हिंदी आवाज चुनें
-      const voice = getFemaleHindiVoice();
-      if (voice) utterance.voice = voice;
-      
-      utterance.lang = 'hi-IN';
-      utterance.rate = 0.85;      // धीमी और साफ
-      utterance.pitch = 1.0;
-      utterance.volume = 1;
-      
+      utterance.lang = 'hi-IN'; utterance.rate = 0.95; utterance.pitch = 1; utterance.volume = 1;
       currentUtterance = utterance;
-      utterance.onend = stopSpeaking;
-      utterance.onerror = stopSpeaking;
-      
+      utterance.onend = stopSpeaking; utterance.onerror = stopSpeaking;
       if (listenBtn) {
         listenBtn.classList.add('speaking');
         const icon = listenBtn.querySelector('i'); if (icon) icon.className = 'fas fa-stop';
-        if (btnText) btnText.textContent = 'आवाज बंद करें';
+        if (btnText) btnText.textContent = ' Stop Listening';
       }
       isSpeaking = true;
       window.speechSynthesis.speak(utterance);
-    } catch (e) { console.error(e); stopSpeaking(); alert('आवाज सिस्टम में समस्या हुई'); }
+    } catch (e) { console.error(e); stopSpeaking(); alert('वॉइस सिस्टम में समस्या हुई'); }
   }
 
   // ========== RENDER RESULTS ==========
@@ -797,8 +758,8 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
     growthAdjustedBar.style.width = d.growthAdjusted + '%';
     yieldLbl.textContent = d.yield + ' t/ha';
     diseaseLbl.textContent = d.diseaseLevel;
-    diseaseLbl.className = `text-2xl font-bold ${d.diseaseLevel.includes('कम')?'text-green-600': d.diseaseLevel.includes('मध्यम')?'text-yellow-600':'text-red-600'}`;
-    riskScoreLbl.textContent = `खतरा स्कोर ${d.diseaseScore}%`;
+    diseaseLbl.className = `text-2xl font-bold ${d.diseaseLevel.includes('Low')?'text-green-600': d.diseaseLevel.includes('Medium')?'text-yellow-600':'text-red-600'}`;
+    riskScoreLbl.textContent = `risk score ${d.diseaseScore}%`;
     soilScoreLbl.textContent = d.soilScore + '%';
     soilBar.style.width = d.soilScore + '%';
     weatherScoreLbl.textContent = d.weatherScore + '%';
@@ -813,14 +774,15 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
     
     const f = d.fertilizer;
     nStatusBadge.textContent = f.nitrogenStatus;
-    nStatusBadge.className = `status-badge status-${f.nitrogenStatus === 'सही' ? 'optimal' : (f.nitrogenStatus === 'कमी' ? 'deficient' : 'excess')}`;
+    nStatusBadge.className = `status-badge status-${f.nitrogenStatus.toLowerCase()}`;
     pStatusBadge.textContent = f.phosphorusStatus;
-    pStatusBadge.className = `status-badge status-${f.phosphorusStatus === 'सही' ? 'optimal' : (f.phosphorusStatus === 'कमी' ? 'deficient' : 'excess')}`;
+    pStatusBadge.className = `status-badge status-${f.phosphorusStatus.toLowerCase()}`;
     kStatusBadge.textContent = f.potassiumStatus;
-    kStatusBadge.className = `status-badge status-${f.potassiumStatus === 'सही' ? 'optimal' : (f.potassiumStatus === 'कमी' ? 'deficient' : 'excess')}`;
+    kStatusBadge.className = `status-badge status-${f.potassiumStatus.toLowerCase()}`;
     ureaDose.textContent = f.ureaKgPerHa;
     dapDose.textContent = f.dapKgPerHa;
     mopDose.textContent = f.mopKgPerHa;
+    // FIX 4: Display soil score directly without extra calculation
     efficiencyFactor.textContent = Math.round(d.soilScore) + '%';
     nitrogenMethodText.textContent = f.applicationMethod.nitrogen;
     phosphorusMethodText.textContent = f.applicationMethod.phosphorus;
@@ -842,9 +804,9 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
       charts.compare = new Chart(ctxComp, { 
         type:'bar', 
         data:{ 
-          labels:['शुरुआती','असली','मिट्टी','मौसम'], 
+          labels:['Raw','Adjusted','Soil','Weather'], 
           datasets:[{ 
-            label:'स्कोर', 
+            label:'score', 
             data:[d.growthRaw, d.growthAdjusted, d.soilScore, d.weatherScore], 
             backgroundColor:['#84cc16','#16a34a','#f59e0b','#0ea5e9'] 
           }] 
@@ -862,7 +824,7 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
         data:{ 
           labels:['N','P','K'], 
           datasets:[{ 
-            label:'kg/ha', 
+            label:'kg per hectare', 
             data:[d.N, d.P, d.K], 
             backgroundColor:['#15803d','#0ea5e9','#7c3aed'] 
           }] 
@@ -882,6 +844,7 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
     roiVal.className = profit.roi < 0 ? 'font-bold text-red-600' : 'font-bold text-green-700';
     breakevenVal.innerText = profit.breakeven.toFixed(1) + ' t/ha';
 
+    // Best possible
     const best = calculateBestPossible(cropStageSelect.value);
     yourGrowthComp.innerText = d.growthAdjusted + '%';
     bestGrowthComp.innerText = best.growth + '%';
@@ -903,7 +866,7 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
     if (isSpeaking) stopSpeaking();
     warnBox.classList.add('hidden');
     if (!allFilled()) {
-      warnText.textContent = '⚠ सभी खाने भरें';
+      warnText.textContent = '⚠ Please fill all fields';
       warnBox.classList.remove('hidden');
       placeholder.classList.remove('hidden');
       loader.classList.add('hidden');
@@ -955,7 +918,7 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
   // Voice button
   if (listenBtn) {
     listenBtn.addEventListener('click', () => {
-      if (!lastResult) { alert('कृपया पहले रिपोर्ट बनाएं'); return; }
+      if (!lastResult) { alert('कृपया पहले कैलकुलेट करें'); return; }
       if (isSpeaking) stopSpeaking(); else speakReport(lastResult);
     });
   }
@@ -965,10 +928,6 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
     try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e){}
     if (listenBtn) { listenBtn.disabled = true; listenBtn.classList.remove('speaking'); }
     isSpeaking = false;
-    // voices चुनने के लिए थोड़ा इंतजार (कुछ ब्राउज़र में async)
-    if (window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = () => {}; // बस ट्रिगर
-    }
   });
   window.addEventListener('beforeunload', () => {
     try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e){}
@@ -999,11 +958,11 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
           <div class="bg-green-50 p-5 rounded-xl border border-green-200">
             <h4 class="font-bold text-lg text-green-800 mb-3">खाद की सलाह कैसे बनती है?</h4>
             <div class="space-y-4 text-gray-700">
-              <div><span class="font-semibold">1.</span> नाइट्रोजन, फॉस्फोरस, पोटाश की कमी देखें</div>
+              <div><span class="font-semibold">1.</span> नाइट्रोजन, फॉस्फोरस, पोटैशियम की कमी चेक करें</div>
               <div><span class="font-semibold">2.</span> जितनी कमी, उतनी खाद (यूरिया/डीएपी/एमओपी)</div>
-              <div><span class="font-semibold">3.</span> मिट्टी की गुणवत्ता के हिसाब से घटाएँ</div>
+              <div><span class="font-semibold">3.</span> मिट्टी की गुणवत्ता (efficiency) लागू करें</div>
               <div><span class="font-semibold">4.</span> सुरक्षा सीमा: यूरिया ≤550, डीएपी ≤300, एमओपी ≤250 किलो/हेक्टेयर</div>
-              <div><span class="font-semibold">5.</span> जरूरत से ज्यादा हो तो खाद न डालें</div>
+              <div><span class="font-semibold">5.</span> ज्यादा होने पर खाद न डालें</div>
             </div>
           </div>
         `; 
@@ -1035,7 +994,7 @@ ${mop > 0 ? `आपको ${mop} किलो एमओपी डालना �
     });
     profitTab.addEventListener('click', () => {
       if (!calculationDone) {
-        alert('पहले रिपोर्ट बनाएं');
+        alert('Please calculate field analysis first');
         return;
       }
       profitTab.classList.add('active-tab');
