@@ -2,7 +2,7 @@
 
 ---- corps ----
 
- # rice ------------------------------
+# rice ------------------------------
 
  🌾 What This System Does
 
@@ -225,6 +225,6 @@ Cancel speech on reload
 
 This makes the system farmer-friendly and accessible.
 
- # sugercane
+# sugercane
 
 all done ------
