@@ -1,7 +1,7 @@
 
 
 (function() {
-  // ==================== EXISTING ENGINE (fully preserved) ====================
+  
   
   // DOM elements
   const districtEl = document.getElementById('district');
@@ -64,14 +64,14 @@
   
   let charts = { compare: null, npk: null };
 
-  // NEW ELEMENTS
+
   const cropStageSelect = document.getElementById('cropStage');
   const analysisTab = document.getElementById('analysisTab');
   const profitTab = document.getElementById('profitTab');
   const analysisSection = document.getElementById('analysisSection');
   const profitSection = document.getElementById('profitSection');
 
-  // ========== NEW VOICE ASSISTANT GLOBALS ==========
+
   const listenBtn = document.getElementById('listenBtn');
   const btnText = listenBtn ? listenBtn.querySelector('.btn-text') : null;
   let lastResult = null;
@@ -107,7 +107,7 @@
     { "name": "Lodging", "triggers": "High N + Low K, strong wind", "symptoms": "Plants fall over", "prevention": "Balance N and K, avoid excess N" }
   ];
 
-  // ========== EXISTING FUNCTIONS (all untouched) ==========
+
   function calculateRiceFertilizer(N, P, K, soilScore) {
     const ideals = { N: { min:120, max:150, ideal:135, sigma:25, baseDose:80, maintDose:20 }, P: { min:40, max:60, ideal:50, sigma:12, baseDose:60, maintDose:20 }, K: { min:40, max:60, ideal:50, sigma:12, baseDose:50, maintDose:20 } };
     const conversion = { NtoUrea:2.17, PtoDAP:2.17, KtoMOP:1.67 };
