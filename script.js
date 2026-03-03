@@ -1,5 +1,5 @@
 
-        // Mobile Menu Toggle
+        
         const mobileToggle = document.querySelector('.mobile-toggle');
         const navMenu = document.querySelector('.nav-menu');
         
@@ -9,7 +9,7 @@
             mobileToggle.querySelector('i').classList.toggle('fa-times');
         });
 
-        // Close mobile menu when clicking outside
+
         document.addEventListener('click', (e) => {
             if (!navMenu.contains(e.target) && !mobileToggle.contains(e.target)) {
                 navMenu.classList.remove('active');
@@ -18,7 +18,7 @@
             }
         });
 
-        // Scroll Animation
+   
         const fadeElements = document.querySelectorAll('.fade-in');
         
         const checkVisibility = () => {
