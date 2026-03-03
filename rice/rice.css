@@ -1,5 +1,5 @@
 
-    /* EXISTING STYLES (preserved) */
+ 
     .progress-bar { height: 8px; border-radius: 4px; transition: width .5s ease-in-out; }
     .disease-row:hover { background-color: #f0fdf4; }
     .dots::after { content: ""; display: inline-block; width: 0.8em; text-align: left; animation: dots 1s steps(5,end) infinite; }
@@ -14,7 +14,7 @@
     .simple-english { font-size: 0.95rem; line-height: 1.5; }
     .sensitivity-bar { height: 6px; border-radius: 3px; }
 
-    /* ===== NEW TAB STYLES ===== */
+  
     .tabs { display: flex; gap: 10px; margin-bottom: 16px; }
     .tabs button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; background-color: #e9e9e9; transition: 0.2s; }
     .active-tab { background-color: #16a34a !important; color: white; font-weight: 500; }
