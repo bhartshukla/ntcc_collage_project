@@ -1,6 +1,6 @@
 # ntcc_collage_project
 
----- corps ----
+---- corps ---- ---
 
 # rice ------------------------------
 
@@ -10,13 +10,13 @@ This project is an Advanced Rice Field Analysis and Decision Support System for 
 
 It collects field data from the farmer and performs scientific calculations to:
 
-Evaluate crop growth potential
+Evaluate crop growth potential - 
 
-Detect disease risk
+Detect disease risk - 
 
-Predict expected yield
+Predict expected yield - 
 
-Recommend fertilizers
+Recommend fertilizers -
 
 Calculate economic profit
 
