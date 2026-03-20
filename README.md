@@ -18,11 +18,11 @@ Predict expected yield -
 
 Recommend fertilizers -
 
-Calculate economic profit
+Calculate economic profit -
 
-Compare with the best possible field condition
+Compare with the best possible field condition -
 
-Provide a Hindi voice report
+Provide a Hindi voice report -
 
 It works like a mini digital agriculture advisor.
 
@@ -31,11 +31,11 @@ It works like a mini digital agriculture advisor.
 
 The system analyzes:
 
-Soil pH
+Soil pH -
 
-Soil moisture
+Soil moisture -
 
-Soil texture
+Soil texture -
 
 It calculates a soil suitability percentage that shows how favorable the soil conditions are for rice growth.
 
@@ -43,19 +43,19 @@ It calculates a soil suitability percentage that shows how favorable the soil co
 
 The system evaluates:
 
-Nitrogen (N)
+Nitrogen (N) -
 
-Phosphorus (P)
+Phosphorus (P) -
 
-Potassium (K)
+Potassium (K) -
 
 It determines whether each nutrient is:
 
-Deficient
+Deficient -
 
-Optimal
+Optimal -
 
-Excess
+Excess -
 
 Based on this, it provides fertilizer recommendations with safe limits.
 
@@ -63,11 +63,11 @@ Based on this, it provides fertilizer recommendations with safe limits.
 
 The system checks:
 
-Temperature
+Temperature -
 
-Humidity
+Humidity -
 
-Rainfall
+Rainfall -
 
 It calculates a weather suitability percentage, showing how favorable environmental conditions are for rice.
 
