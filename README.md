@@ -145,12 +145,12 @@ Yield range:
 
 The system calculates:
 
-Urea recommendation
+Urea recommendation -
 
-DAP recommendation
+DAP recommendation -
 
-MOP recommendation
-
+MOP recommendation -
+ 
 It also provides:
 
 Application method (split doses)
