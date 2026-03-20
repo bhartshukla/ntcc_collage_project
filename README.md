@@ -85,45 +85,45 @@ It uses a sigmoid (biological growth) model to simulate realistic crop growth be
 
 This produces:
 
-Raw Growth Score
+Raw Growth Score -
 
-Adjusted Growth Score
+Adjusted Growth Score -
 
-5️⃣ Disease Risk Detection
+5️⃣ Disease Risk Detection 
 
 The system analyzes risk factors such as:
 
-High nitrogen
+High nitrogen -
 
-High humidity
+High humidity -
 
-Excess moisture
+Excess moisture -
 
-pH imbalance
+pH imbalance - 
 
-Low potassium
+Low potassium -
 
 It calculates:
 
-Disease risk percentage
+Disease risk percentage -
 
 Risk level (Low / Medium / High)
 
-Warning messages
+Warning messages -
 
 6️⃣ Stage-Based Penalty (Uttar Pradesh Specific)
 
 Different growth penalties are applied based on the selected crop stage:
 
-Nursery
+Nursery -
 
-Tillering
+Tillering -
 
-Panicle Initiation
+Panicle Initiation -
 
-Flowering
+Flowering -
 
-Grain Filling
+Grain Filling -
 
 For example:
 
